@@ -2220,9 +2220,18 @@ html.is-locked {
   opacity: 0;
   white-space: nowrap;
   line-height: 1;
-  color: var(--ink);
-  font-family: var(--font-display);
-  letter-spacing: -0.045em;
+  color: transparent;
+  font-family: var(--font-serif);
+  font-weight: 900;
+  letter-spacing: 0.01em;
+  -webkit-text-stroke: 2.2px var(--ink);
+  background-image: repeating-linear-gradient(
+    92deg,
+    rgba(215, 255, 63, 0.2) 0 2px,
+    transparent 2px 9px
+  );
+  -webkit-background-clip: text;
+  background-clip: text;
   transform-origin: left top;
   will-change: transform, opacity;
 }
@@ -2249,7 +2258,7 @@ html.is-locked {
   position: relative;
 }
 .prac-peek {
-  position: absolute;
+  position: fixed;
   top: 0;
   left: 38%;
   width: clamp(240px, 26vw, 380px);
@@ -2333,4 +2342,14 @@ html.is-locked {
   font-family: var(--font-black);
   font-weight: 400;
   letter-spacing: -0.035em;
+}
+
+/* 固定站头下面的压暗带：页面上滚时从头部底下淡出，不会和导航文字糊在一起 */
+.scrim {
+  position: fixed;
+  inset: 0 0 auto;
+  height: 104px;
+  z-index: 30;
+  pointer-events: none;
+  background: linear-gradient(to bottom, var(--bg) 58%, rgba(12, 12, 12, 0));
 }

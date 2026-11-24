@@ -257,36 +257,44 @@ import { practice } from '../data/practice';
       let raf = 0;
       let curY = 0;
       let targetY = 0;
+      let curLocal = 0;
+      let localY = 0;
       let inited = false;
 
-      const draw = (y: number) => {
-        const stageH = list.offsetHeight;
+      // 画框固定在视口里，中心跟住指针（留 12px 安全边）
+      const draw = (clientY: number, local: number) => {
         const boxH = peek.offsetHeight;
-        const py = Math.max(0, Math.min(stageH - boxH, y - boxH / 2));
+        const py = Math.max(12, Math.min(window.innerHeight - boxH - 12, clientY - boxH / 2));
         peek.style.setProperty('--py', `${py.toFixed(2)}px`);
-        const t = toFloat(y);
+        const t = toFloat(local);
         strip.style.transform = `translate3d(0, ${(-t * boxH).toFixed(2)}px, 0)`;
       };
 
       // 指数阻尼：不管刷新率多少，手感一致
       const loop = () => {
         const d = targetY - curY;
+        const dl = localY - curLocal;
         curY += d * 0.14;
-        if (Math.abs(d) < 0.25) {
+        curLocal += dl * 0.16;
+        if (Math.abs(d) < 0.25 && Math.abs(dl) < 0.2) {
           curY = targetY;
-          draw(curY);
+          curLocal = localY;
+          draw(curY, curLocal);
           raf = 0;
           return;
         }
-        draw(curY);
+        draw(curY, curLocal);
         raf = requestAnimationFrame(loop);
       };
 
       list.addEventListener('pointermove', (e) => {
         const rect = list.getBoundingClientRect();
-        targetY = e.clientY - rect.top;
+        // 画框跟着指针走（视口坐标），图带按指针在列表里的相对位置连续滚动
+        targetY = e.clientY;
+        localY = e.clientY - rect.top;
         if (!inited) {
           curY = targetY;
+          curLocal = localY;
           inited = true;
         }
         peek.classList.add('is-on');
