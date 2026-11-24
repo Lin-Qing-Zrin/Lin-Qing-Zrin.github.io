@@ -16,7 +16,7 @@ const featured = works.filter((w) => w.data.featured).slice(0, 4);
     <div class="hero__grid">
       <div>
         <div class="hero__top" data-reveal>
-          <p class="mono">Student · Digital Media · Suzhou</p>
+          <p class="mono" data-boot>Student · Digital Media · Suzhou</p>
         </div>
 
         <h1 class="t-display">
@@ -39,12 +39,35 @@ const featured = works.filter((w) => w.data.featured).slice(0, 4);
       <dl class="data-row">
         <div><dt>Local</dt><dd data-clock>--:--:--</dd></div>
         <div><dt>Zone</dt><dd>UTC+08:00</dd></div>
-        <div><dt>Lat</dt><dd>31.2989° N</dd></div>
-        <div><dt>Lon</dt><dd>120.5853° E</dd></div>
+        <div><dt>Lat</dt><dd data-lat>31.2989° N</dd></div>
+        <div><dt>Lon</dt><dd data-lon>120.5853° E</dd></div>
       </dl>
       <span class="tc">REC <span class="tc__num" data-tc>00:00:00:00</span></span>
     </div>
   </section>
+
+  <script>
+    // 地球拖到哪，读数就变到哪（视图中心经纬度）
+    const fmt = (v: number, pos: string, neg: string) =>
+      Math.abs(v).toFixed(4) + '° ' + (v >= 0 ? pos : neg);
+
+    function bindGlobeReadout() {
+      const lat = document.querySelector<HTMLElement>('[data-lat]');
+      const lon = document.querySelector<HTMLElement>('[data-lon]');
+      if (!lat || !lon) return;
+      const w = window as Window & { __globeBound?: boolean };
+      if (w.__globeBound) return;
+      w.__globeBound = true;
+      window.addEventListener('globe:view', (e: Event) => {
+        const d = (e as CustomEvent<{ lat: number; lon: number }>).detail;
+        lat.textContent = fmt(d.lat, 'N', 'S');
+        lon.textContent = fmt(d.lon, 'E', 'W');
+      });
+    }
+
+    document.addEventListener('astro:page-load', bindGlobeReadout);
+    bindGlobeReadout();
+  </script>
 
   <section class="section wrap">
     <div class="section-head">

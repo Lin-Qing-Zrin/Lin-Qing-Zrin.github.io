@@ -3,23 +3,28 @@ import { getCollection, render } from 'astro:content';
 import Base from '../../layouts/Base.astro';
 
 export async function getStaticPaths() {
-  const works = await getCollection('works');
-  return works.map((entry) => ({
+  const works = (await getCollection('works')).sort((a, b) => a.data.order - b.data.order);
+  return works.map((entry, i) => ({
     params: { slug: entry.id },
-    props: { entry },
+    props: { entry, index: i, total: works.length, next: works[(i + 1) % works.length] },
   }));
 }
 
-const { entry } = Astro.props;
+const { entry, index, total, next } = Astro.props;
 const { Content } = await render(entry);
 const d = entry.data;
+const no = (n: number) => String(n).padStart(2, '0');
 ---
 
 <Base title={`${d.title} — 刘启征`} description={d.summary}>
   <article>
     <header class="case-hero wrap">
-      <p class="t-eyebrow" data-reveal>{d.category} — {d.year}</p>
-      <h1 class="t-h1" style="margin-top:20px">
+      <div class="case-bar mono" data-reveal>
+        <span>{no(index + 1)} / {no(total)}</span>
+        <span>{d.category}</span>
+        <span>{d.year}</span>
+      </div>
+      <h1 class="t-h1" style="margin-top:22px">
         <span class="line-mask"><span style="--i:0">{d.title}</span></span>
       </h1>
       <p class="lede" data-reveal style="--d:1; margin-top:clamp(24px,4vw,44px)">
@@ -38,23 +43,15 @@ const d = entry.data;
           decoding="async"
           style={`aspect-ratio:${d.ratio.replace(':', '/')}; object-fit:contain`}
         />
+        <figcaption class="case-cap mono">Plate {no(index + 1)} · {d.ratio} · {d.year}</figcaption>
       </figure>
     </div>
 
     <div class="wrap case-body">
-      <dl class="case-facts">
-        <div>
-          <dt>角色</dt>
-          <dd>{d.role}</dd>
-        </div>
-        <div>
-          <dt>工具</dt>
-          <dd>{d.tools.join(', ')}</dd>
-        </div>
-        <div>
-          <dt>年份</dt>
-          <dd>{d.year}</dd>
-        </div>
+      <dl class="data-row case-facts">
+        <div><dt>Role</dt><dd>{d.role}</dd></div>
+        <div><dt>Tools</dt><dd>{d.tools.join(' / ')}</dd></div>
+        <div><dt>Year</dt><dd>{d.year}</dd></div>
       </dl>
 
       <div class="prose">
@@ -63,9 +60,12 @@ const d = entry.data;
     </div>
 
     <div class="wrap" style="padding-bottom: clamp(64px, 10vw, 160px)">
-      <hr class="rule" />
-      <a class="t-h2" href="/work/" style="display:inline-block; margin-top:32px" data-cursor="hover">
-        ← 全部作品
+      <a class="next-work" href={`/work/${next.id}/`} data-cursor="hover" data-magnetic>
+        <span class="next-work__k mono">
+          Next <span class="cn cn--inline">件作品</span>
+        </span>
+        <span class="next-work__t">{next.data.title}</span>
+        <span class="next-work__m mono">{next.data.category} · {next.data.year}</span>
       </a>
     </div>
   </article>

@@ -6,7 +6,7 @@ const pin = { lon: 120.5853, lat: 31.2989, label: 'Suzhou' };
 ---
 
 <figure class="globe" data-globe data-pin-lon={pin.lon} data-pin-lat={pin.lat}>
-  <div class="globe__frame">
+  <div class="globe__frame" data-cursor="Drag">
     <canvas class="globe__canvas" aria-hidden="true"></canvas>
   </div>
   <figcaption class="globe__cap">
@@ -85,6 +85,7 @@ const pin = { lon: 120.5853, lat: 31.2989, label: 'Suzhou' };
 
     const state = { lon0: pinLon + 8, lat0: 22, vel: 0, dragging: false, hover: false };
     let raf = 0;
+    let lastView = 0;
     let w = 0;
     let h = 0;
     let r = 0;
@@ -269,6 +270,17 @@ const pin = { lon: 120.5853, lat: 31.2989, label: 'Suzhou' };
       if (state.lon0 < -180) state.lon0 += 360;
 
       draw(t);
+
+      // 把「视角中心」广播出去：首页那排读数会跟着变（仪器感的关键）
+      if (t - lastView > 110) {
+        lastView = t;
+        window.dispatchEvent(
+          new CustomEvent('globe:view', {
+            detail: { lat: state.lat0, lon: state.lon0 },
+          })
+        );
+      }
+
       raf = requestAnimationFrame(tick);
     };
 

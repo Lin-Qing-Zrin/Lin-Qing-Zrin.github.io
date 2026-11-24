@@ -484,6 +484,65 @@ const {
         run();
       }
 
+      /* ------------------------------------------------------------
+         磁吸：指针靠近时元素被「吸」过去几像素，离开时缓动归位
+         （只在有真实指针的设备上开，触屏不做）
+         ------------------------------------------------------------ */
+      function initMagnetic() {
+        if (reduceMotion || window.matchMedia('(hover: none)').matches) return;
+        document
+          .querySelectorAll<HTMLElement>('[data-magnetic], .btn, .contact-mail')
+          .forEach((el) => {
+            if (el.dataset.magneticBound) return;
+            el.dataset.magneticBound = '1';
+            el.style.transition = 'transform .5s var(--ease)';
+            el.addEventListener('pointermove', (e) => {
+              const r = el.getBoundingClientRect();
+              const dx = (e.clientX - (r.left + r.width / 2)) / r.width;
+              const dy = (e.clientY - (r.top + r.height / 2)) / r.height;
+              el.style.transition = 'transform .12s linear';
+              el.style.transform = `translate3d(${(dx * 12).toFixed(2)}px, ${(dy * 9).toFixed(2)}px, 0)`;
+            });
+            el.addEventListener('pointerleave', () => {
+              el.style.transition = 'transform .6s var(--ease)';
+              el.style.transform = '';
+            });
+          });
+      }
+
+      /* ------------------------------------------------------------
+         开机：等宽小字逐帧「解码」成最终文案（只跑一次，不循环）
+         ------------------------------------------------------------ */
+      const SCRAMBLE = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789#/<>*+=';
+      function bootMono() {
+        document.querySelectorAll<HTMLElement>('[data-boot]').forEach((el) => {
+          if (el.dataset.booted) return;
+          el.dataset.booted = '1';
+          const final = el.dataset.boot ?? el.textContent ?? '';
+          if (!final) return;
+          if (reduceMotion) {
+            el.textContent = final;
+            return;
+          }
+          let frame = 0;
+          const total = 16;
+          const id = window.setInterval(() => {
+            frame++;
+            const revealed = Math.floor((frame / total) * final.length);
+            let out = '';
+            for (let i = 0; i < final.length; i++) {
+              const ch = final[i];
+              out += i < revealed || ch === ' ' ? ch : SCRAMBLE[(Math.random() * SCRAMBLE.length) | 0];
+            }
+            el.textContent = out;
+            if (frame >= total) {
+              window.clearInterval(id);
+              el.textContent = final;
+            }
+          }, 26);
+        });
+      }
+
       function boot() {
         initPreloader();
         initLenis();
@@ -494,6 +553,8 @@ const {
         initHud();
         initField();
         initGhosts();
+        initMagnetic();
+        bootMono();
         initVeil();
         initPreview();
         initCursor();

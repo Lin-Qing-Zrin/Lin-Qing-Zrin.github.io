@@ -1305,3 +1305,95 @@ html.no-preloader .preloader {
     display: none;
   }
 }
+
+/* ============================================================
+   详情页：仪器化的头部 + 下一件作品
+   ============================================================ */
+.case-bar {
+  display: flex;
+  justify-content: space-between;
+  gap: 20px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--line);
+  color: var(--gray);
+  text-transform: uppercase;
+}
+.case-cap {
+  margin-top: 14px;
+  color: var(--gray);
+  text-transform: uppercase;
+  text-align: right;
+}
+.case-body {
+  display: block;
+}
+.case-body .case-facts {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+  margin: 0 0 clamp(40px, 6vw, 88px);
+  padding-top: 18px;
+  border-top: 1px solid var(--line);
+}
+.case-body .case-facts dt {
+  color: var(--gray);
+  margin-bottom: 6px;
+}
+.case-body .case-facts dd {
+  margin: 0;
+  color: var(--ink);
+  font-family: var(--font-body);
+  font-size: 14px;
+}
+.next-work {
+  display: block;
+  border-top: 1px solid var(--line);
+  padding-top: clamp(22px, 3vw, 34px);
+}
+.next-work__k {
+  display: block;
+  color: var(--gray);
+  text-transform: uppercase;
+  margin-bottom: 16px;
+}
+.next-work__t {
+  display: block;
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-size: clamp(28px, 4.6vw, 62px);
+  line-height: 1.06;
+  letter-spacing: -0.015em;
+  transition: transform 0.6s var(--ease);
+}
+.next-work:hover .next-work__t {
+  transform: translateX(16px);
+}
+.next-work__m {
+  display: block;
+  margin-top: 14px;
+  color: var(--gray);
+  text-transform: uppercase;
+}
+
+/* 列表聚焦：悬停某一行时，其它行退到后面 */
+@media (hover: hover) {
+  .work-list:hover .work-row {
+    opacity: 0.34;
+  }
+  .work-list:hover .work-row:hover {
+    opacity: 1;
+  }
+  .work-row {
+    transition: opacity 0.5s var(--ease);
+  }
+}
+
+/* 磁吸元素：JS 位移时别抖 */
+[data-magnetic] {
+  will-change: transform;
+}
+
+/* 入场时等宽小字「开机」打乱一次 */
+.boot-mono {
+  display: inline-block;
+}

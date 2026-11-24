@@ -191,3 +191,17 @@ git push -u origin main
   .cn--inline 是同一行里的插注（Recent work · 最近的作品）；导航里的中文用 .nav__cn。
 - **内容层用中文**：作品 summary、详情页正文、About 里那段 p.cn。这些是你自己写的东西，中文才自然。
 - 幽灵大字（.ghost-word）的中文字号由 JS 按字数估算后降号（itGhost()），别手动写死 ont-size。
+
+### 交互清单（这些是「手感」的来源，不是装饰）
+
+| 位置 | 动作 | 效果 | 实现 |
+| --- | --- | --- | --- |
+| 地球 | 拖 / 悬停 | 拖动旋转、松手有惯性、悬停停转 | Globe.astro，data-cursor="Drag" |
+| 地球 → 首页读数 | 拖动 | Lat / Lon 实时跟着变 | globe:view 事件 → index.astro 内联脚本 |
+| 作品列表 | 悬停某一行 | 其它行降到 34% 透明，只留一行亮着 | .work-list:hover .work-row |
+| 作品列表 | 悬停 | 光标跟随预览（按真实比例换框）+ 编号变荧光色 + 右下 HUD 显示  2 — SOCIAL CONTENT — 2024 + 背景幽灵字换成类型 | WorkRows.astro + initPreview / setHudTarget / itGhost |
+| 按钮 / 邮箱 | 指针靠近 | 磁吸位移最多 12×9px，离开 0.6s 缓动归位 | initMagnetic() |
+| 首屏等宽小字 | 进页面 | 逐字从乱码「解码」成正文（只跑一次） | ootMono()，元素加 data-boot |
+| 详请页 | 滚动到底 | Plate 01 · 4:5 · 2024 图注 + 三栏规格 + Next 下一件 | [...slug].astro |
+
+新增交互前先问一句：**它有没有告诉用户一件他不知道的事？** 没有就别加。
