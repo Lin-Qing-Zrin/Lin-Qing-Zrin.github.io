@@ -2217,7 +2217,7 @@ html.is-locked {
   z-index: 2;
   background: var(--bg);
 }
-/* PRACTICE：画框自己会走——移到哪一行，方框就滑到哪一行，框里的图跟着一起走 */
+/* PRACTICE：一个会走的方框，框里是连续图带——滚过接缝时两张图同时在框里 */
 .prac-stage {
   position: relative;
 }
@@ -2226,76 +2226,37 @@ html.is-locked {
   top: 0;
   left: 38%;
   width: clamp(210px, 23vw, 330px);
-  aspect-ratio: 1 / 1;
+  height: clamp(180px, 19vw, 250px);
+  overflow: hidden;
   z-index: 2;
   pointer-events: none;
   opacity: 0;
   transform: translate3d(0, var(--py, 0px), 0);
-  transition:
-    opacity 0.3s var(--ease),
-    transform 0.66s var(--ease);
-  background: #0d0d0c;
-  outline: 1px solid rgba(236, 233, 227, 0.16);
-  will-change: transform, opacity;
+  transition: opacity 0.26s var(--ease);
+  background: #0c0c0b;
+  outline: 1px solid rgba(236, 233, 227, 0.14);
+  will-change: transform;
 }
 .prac-peek.is-on {
   opacity: 1;
 }
-/* 两层图交叉淡入，换行时不闪白 */
-.prac-peek__img {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  object-position: center;
-  opacity: 0;
-  transition: opacity 0.34s var(--ease);
+.prac-peek__strip {
+  display: flex;
+  flex-direction: column;
+  will-change: transform;
 }
-.prac-peek__img.is-front {
-  opacity: 1;
-}
-/* 圆形 View 徽标 */
-.prac-peek__badge {
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  transform: translate(-50%, -50%) scale(0.72);
-  width: 62px;
-  height: 62px;
-  border-radius: 50%;
+.prac-peek__item {
+  flex: 0 0 auto;
+  height: clamp(180px, 19vw, 250px);
+  margin: 0;
   display: grid;
   place-items: center;
-  font-family: var(--font-mono);
-  font-size: 10px;
-  letter-spacing: 0.04em;
-  color: #0a0a09;
-  background: var(--accent);
-  opacity: 0;
-  transition:
-    opacity 0.3s var(--ease),
-    transform 0.44s var(--ease);
+  padding: clamp(6px, 0.7vw, 10px);
 }
-.prac-peek.is-on .prac-peek__badge {
-  opacity: 1;
-  transform: translate(-50%, -50%) scale(1);
-}
-.prac-peek__arrow {
-  font-size: 9px;
-  line-height: 1;
-}
-.prac-peek__label {
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  padding: 10px 0 8px;
-  font-size: 9px;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: var(--ink-2);
-  text-align: center;
-  background: linear-gradient(to top, rgba(13, 13, 12, 0.92), transparent);
+.prac-peek__item img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
 }
 @media (hover: none) {
   .prac-peek {

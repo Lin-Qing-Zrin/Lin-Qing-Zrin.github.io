@@ -221,55 +221,60 @@ import { practice } from '../data/practice';
     document.addEventListener('astro:page-load', bindHeroMorph);
     bindHeroMorph();
 
-    /* PRACTICE：画框跟着行移动，框里的图一起走 */
+    /* PRACTICE：一个会走的方框，框里是一条连续的图带——指针往下走，带子像滚轮一样连续滚 */
     function bindPracticePeek() {
       const list = document.querySelector<HTMLElement>('[data-prac]');
       const peek = document.querySelector<HTMLElement>('[data-prac-peek]');
-      if (!list || !peek) return;
+      const strip = document.querySelector<HTMLElement>('[data-peek-strip]');
+      if (!list || !peek || !strip) return;
       const W = window as Window & { __pracPeek?: boolean };
       if (W.__pracPeek) return;
       W.__pracPeek = true;
       if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
       if (window.matchMedia('(hover: none)').matches) return;
 
-      const layers = [...peek.querySelectorAll<HTMLImageElement>('.prac-peek__img')];
-      const label = peek.querySelector<HTMLElement>('[data-peek-label]');
-      let front = 0;
-      let token = 0;
+      const rows = [...list.querySelectorAll<HTMLElement>('[data-peek-index]')].map(
+        (a) => a.closest('li') as HTMLElement,
+      );
+      if (!rows.length) return;
 
-      const show = (src: string) => {
-        const back = layers[1 - front];
-        const my = ++token;
-        back.src = src;
-        const swap = () => {
-          if (my !== token) return;
-          back.classList.add('is-front');
-          layers[front].classList.remove('is-front');
-          front = 1 - front;
-        };
-        // decode() 之后换，避免换图瞬间闪白
-        if (back.decode) back.decode().then(swap).catch(swap);
-        else swap();
+      // 每行的中心（相对列表）
+      const centers = rows.map((r) => r.offsetTop + r.offsetHeight / 2);
+
+      // 把指针的 y 换算成「连续的行坐标」：0 = 第一行，n-1 = 最后一行，之间是小数
+      const toFloat = (y: number) => {
+        if (y <= centers[0]) return 0;
+        const last = centers.length - 1;
+        if (y >= centers[last]) return last;
+        for (let i = 0; i < last; i++) {
+          const a = centers[i];
+          const b = centers[i + 1];
+          if (y >= a && y <= b) return i + (y - a) / (b - a);
+        }
+        return last;
       };
 
-      // 画框中心对齐到目标行的中线，并夹在列表范围里
-      const moveTo = (row: HTMLElement) => {
+      let raf = 0;
+      let nextY = 0;
+      const apply = () => {
+        raf = 0;
         const stageH = list.offsetHeight;
         const boxH = peek.offsetHeight;
-        const center = row.offsetTop + row.offsetHeight / 2;
-        const py = Math.max(0, Math.min(stageH - boxH, center - boxH / 2));
+        const y = nextY;
+        const py = Math.max(0, Math.min(stageH - boxH, y - boxH / 2));
         peek.style.setProperty('--py', `${Math.round(py)}px`);
+        // 带子按连续坐标滚：滚过接缝时两张图同时可见
+        const t = toFloat(y);
+        strip.style.transform = `translate3d(0, ${(-t * boxH).toFixed(2)}px, 0)`;
       };
 
-      list.querySelectorAll<HTMLElement>('[data-peek-index]').forEach((a) => {
-        a.addEventListener('pointerenter', () => {
-          const row = a.closest('li') ?? a;
-          moveTo(row as HTMLElement);
-          if (a.dataset.peekSrc) show(a.dataset.peekSrc);
-          if (label) label.textContent = a.dataset.peekLabel ?? '';
-          peek.classList.add('is-on');
-        });
+      list.addEventListener('pointermove', (e) => {
+        const rect = list.getBoundingClientRect();
+        nextY = e.clientY - rect.top;
+        peek.classList.add('is-on');
+        if (!raf) raf = requestAnimationFrame(apply);
       });
+      list.addEventListener('pointerenter', () => peek.classList.add('is-on'));
       list.addEventListener('pointerleave', () => peek.classList.remove('is-on'));
     }
 
@@ -305,10 +310,13 @@ import { practice } from '../data/practice';
       </ol>
 
       <div class="prac-peek" data-prac-peek aria-hidden="true">
-        <img class="prac-peek__img is-front" alt="" decoding="async" />
-        <img class="prac-peek__img" alt="" decoding="async" />
-        <span class="prac-peek__badge">View<span class="prac-peek__arrow">↗</span></span>
-        <span class="prac-peek__label mono" data-peek-label></span>
+        <div class="prac-peek__strip" data-peek-strip>
+          {practice.map((e) => (
+            <figure class="prac-peek__item">
+              <img src={e.img} alt="" loading="lazy" decoding="async" />
+            </figure>
+          ))}
+        </div>
       </div>
     </div>
   </section>
