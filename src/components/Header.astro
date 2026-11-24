@@ -1,8 +1,8 @@
 ---
 const links = [
-  { href: '/work/', label: 'Work' },
-  { href: '/about/', label: 'About' },
-  { href: '/contact/', label: 'Contact' },
+  { href: '/work/', label: 'Work', cn: '作品' },
+  { href: '/about/', label: 'About', cn: '关于' },
+  { href: '/contact/', label: 'Contact', cn: '联系' },
 ];
 const path = Astro.url.pathname;
 ---
@@ -15,6 +15,7 @@ const path = Astro.url.pathname;
         links.map((l) => (
           <a href={l.href} data-cursor="hover" aria-current={path.startsWith(l.href) ? 'page' : undefined}>
             {l.label}
+            <span class="nav__cn">{l.cn}</span>
           </a>
         ))
       }

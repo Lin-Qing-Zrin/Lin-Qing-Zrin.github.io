@@ -173,3 +173,21 @@ git push -u origin main
 1. 从 https://fontsource.org 或 https://www.fontshare.com 下载 woff2。
 2. 放进 `public/fonts/`。
 3. 在 `global.css` 顶部写 `@font-face`，然后删掉 `Base.astro` 里的 Google Fonts `<link>`。
+
+### 文字语言（中英分工）
+
+**英文是主语气，中文只做解释层。** 别把两者写成对等的双语版本，那会让版面变成两套字。
+
+- 标题、导航、按钮、读数标签：英文（Work About Contact Local / Zone / Lat / Lon）。
+- 需要让人看懂的地方：英文下面加一行 12–14px 灰字，用 .cn：
+
+  `html
+  <p class="lede">
+    Best way to reach me is email.
+    <span class="cn">最好直接发邮件，我基本一天内会回。</span>
+  </p>
+  `
+
+  .cn--inline 是同一行里的插注（Recent work · 最近的作品）；导航里的中文用 .nav__cn。
+- **内容层用中文**：作品 summary、详情页正文、About 里那段 p.cn。这些是你自己写的东西，中文才自然。
+- 幽灵大字（.ghost-word）的中文字号由 JS 按字数估算后降号（itGhost()），别手动写死 ont-size。

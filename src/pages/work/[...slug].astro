@@ -15,7 +15,7 @@ const { Content } = await render(entry);
 const d = entry.data;
 ---
 
-<Base title={`${d.title} — Your Name`} description={d.summary}>
+<Base title={`${d.title} — 刘启征`} description={d.summary}>
   <article>
     <header class="case-hero wrap">
       <p class="t-eyebrow" data-reveal>{d.category} — {d.year}</p>
@@ -44,15 +44,15 @@ const d = entry.data;
     <div class="wrap case-body">
       <dl class="case-facts">
         <div>
-          <dt>Role</dt>
+          <dt>角色</dt>
           <dd>{d.role}</dd>
         </div>
         <div>
-          <dt>Tools</dt>
+          <dt>工具</dt>
           <dd>{d.tools.join(', ')}</dd>
         </div>
         <div>
-          <dt>Year</dt>
+          <dt>年份</dt>
           <dd>{d.year}</dd>
         </div>
       </dl>
@@ -65,7 +65,7 @@ const d = entry.data;
     <div class="wrap" style="padding-bottom: clamp(64px, 10vw, 160px)">
       <hr class="rule" />
       <a class="t-h2" href="/work/" style="display:inline-block; margin-top:32px" data-cursor="hover">
-        ← All work
+        ← 全部作品
       </a>
     </div>
   </article>

@@ -12,13 +12,13 @@ interface Props {
 }
 
 const {
-  title = '刘启征 — Digital Media & AI Visual',
-  description = 'Digital Media Technology student in Suzhou — posters, short films and AI visual pipelines.',
+  title = '刘启征 — 数字媒体 & AI 视觉',
+  description = '苏州健雄职业技术学院 · 数字媒体技术在读。做海报、短片与 AI 视觉。',
 } = Astro.props;
 ---
 
 <!doctype html>
-<html lang="en">
+<html lang="zh-CN">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -38,7 +38,7 @@ const {
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Inter+Tight:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Inter+Tight:wght@400;500;600&family=JetBrains+Mono:wght@400;500&family=Noto+Sans+SC:wght@400;500;700&display=swap"
       rel="stylesheet"
     />
 
@@ -253,6 +253,22 @@ const {
         return s;
       }
 
+      /* ------------------------------------------------------------
+         幽灵大字：按「字数」估宽降号，长词组永远不裁边
+         （绝对定位元素量不出真实文字宽度，用 CJK=1em / 拉丁=0.55em 估算）
+         ------------------------------------------------------------ */
+      function fitGhost(el: HTMLElement, text: string) {
+        el.textContent = text;
+        el.style.fontSize = '';
+        const avail = (el.parentElement?.clientWidth ?? window.innerWidth) * 0.92;
+        let units = 0;
+        for (const ch of text) {
+          units += /[\u3000-\u9fff\uff00-\uffef]/.test(ch) ? 1 : 0.55;
+        }
+        el.style.fontSize =
+          Math.max(28, Math.min(200, avail / Math.max(units, 1))).toFixed(1) + 'px';
+      }
+
       function initField() {
         window.clearInterval(fieldTimer);
         fieldEl = document.querySelector<HTMLElement>('[data-field]');
@@ -293,6 +309,7 @@ const {
          ------------------------------------------------------------ */
       function initGhosts() {
         ghostEls = Array.from(document.querySelectorAll<HTMLElement>('[data-ghost]'));
+        for (const g of ghostEls) fitGhost(g, g.textContent ?? '');
       }
 
       /* ------------------------------------------------------------
@@ -343,24 +360,17 @@ const {
         // 作品行：右侧 HUD 显示目标（编号 / 类型 / 年份）；页面上的幽灵大字跟着换成该作品的类型
         const ghost = document.querySelector<HTMLElement>('[data-ghost]');
         const ghostDefault = ghost?.textContent ?? '';
+
         document.querySelectorAll<HTMLElement>('[data-title]').forEach((row) => {
           row.addEventListener('pointerenter', () => {
             if (row.dataset.label) setHudTarget(row.dataset.label);
-            if (ghost && row.dataset.cat) {
-              ghost.textContent = row.dataset.cat;
-              // 长词组自动降号，否则一行 340px 的大字会把整个版面糊住
-              ghost.style.fontSize =
-                row.dataset.cat.length > 9 ? 'clamp(64px, 9.5vw, 150px)' : '';
-            }
+            if (row.dataset.cat && ghost) fitGhost(ghost, row.dataset.cat);
           });
           row.addEventListener('pointerleave', (e) => {
             const to = e.relatedTarget;
             if (to instanceof Element && to.closest('[data-title]')) return;
             setHudTarget('');
-            if (ghost) {
-              ghost.textContent = ghostDefault;
-              ghost.style.fontSize = '';
-            }
+            if (ghost) fitGhost(ghost, ghostDefault);
           });
         });
       }
@@ -434,7 +444,7 @@ const {
           return;
         }
         const word = el.querySelector<HTMLElement>('[data-preloader-word]');
-        const words = ['Hello', 'Bonjour', 'नमस्ते', 'Ciao', 'Olá', 'おい', 'Hallå', 'Guten tag', 'Hallo'];
+        const words = ['你好', 'Hello', 'Bonjour', 'नमस्ते', 'Ciao', 'Olá', 'おい', 'Hallå', 'Hallo'];
         let i = 0;
         const timer = window.setInterval(() => {
           i = (i + 1) % words.length;

@@ -5,7 +5,7 @@ year: 2024
 cover: /images/works/douyin.svg
 ratio: "9:16"
 tools: ["Premiere Pro", "CapCut", "After Effects"]
-role: Editing · Content Planning
+role: Editing · Planning
 summary: 独立运营的影像账号，累计 2.3w 粉丝，单条最高播放 180w。负责选题、剪辑、封面与发布时间。
 order: 2
 ---

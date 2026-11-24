@@ -14,6 +14,7 @@ const works = (await getCollection('works')).sort((a, b) => a.data.order - b.dat
       <span class="line-mask"><span style="--i:0">Work</span></span>
     </h1>
     <p class="t-meta" data-reveal style="--d:1">{works.length} selected projects · 2023–2024</p>
+    <p class="cn" data-reveal style="--d:2">共 {works.length} 件作品 · 2023–2024</p>
   </section>
 
   <section class="wrap" style="padding-bottom: clamp(64px, 10vw, 160px)">

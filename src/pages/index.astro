@@ -16,7 +16,7 @@ const featured = works.filter((w) => w.data.featured).slice(0, 4);
     <div class="hero__grid">
       <div>
         <div class="hero__top" data-reveal>
-          <p class="mono">Student — Digital Media — Suzhou</p>
+          <p class="mono">Student · Digital Media · Suzhou</p>
         </div>
 
         <h1 class="t-display">
@@ -24,8 +24,9 @@ const featured = works.filter((w) => w.data.featured).slice(0, 4);
         </h1>
 
         <p class="hero__lede-s" data-reveal style="--d:1">
-          Posters, short films and AI-driven visuals. Studying Digital Media Technology —
-          <em>building a pipeline from idea to final frame.</em>
+          Posters, short films and AI-driven visuals — building a pipeline from idea to
+          final frame.
+          <span class="cn">做海报、剪短片，也在把 AI 工具一点点拧成一条真能干活的生产管线。</span>
         </p>
       </div>
 
@@ -47,7 +48,7 @@ const featured = works.filter((w) => w.data.featured).slice(0, 4);
 
   <section class="section wrap">
     <div class="section-head">
-      <p class="mono" data-reveal>Recent work</p>
+      <p class="mono" data-reveal>Recent work <span class="cn cn--inline">最近的作品</span></p>
       <a class="link-u mono" href="/work/" data-cursor="hover">All work ({works.length})</a>
     </div>
     <WorkRows items={featured} />
@@ -56,12 +57,13 @@ const featured = works.filter((w) => w.data.featured).slice(0, 4);
   <section class="section wrap">
     <hr class="rule" />
     <div class="split">
-      <p class="mono" data-reveal>Currently</p>
+      <p class="mono" data-reveal>Currently <span class="cn cn--inline">现在</span></p>
       <div data-reveal style="--d:1">
         <p class="t-h2" style="margin-bottom:20px">
           Open to internships, collaborations<br />and commissioned posters.
         </p>
-        <a class="btn btn--solid" href="/contact/" data-cursor="let’s talk">Get in touch</a>
+        <p class="cn" style="margin-bottom:22px">接实习、接合作，也接海报和短片的活。</p>
+        <a class="btn btn--solid" href="/contact/" data-cursor="hover">Get in touch</a>
       </div>
     </div>
   </section>
