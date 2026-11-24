@@ -38,9 +38,9 @@ const rand = (i: number) => {
   return x - Math.floor(x);
 };
 const jitter = (i: number) => {
-  const dy = Math.round((rand(i) * 2 - 1) * 62);
-  const dx = Math.round((rand(i + 11) * 2 - 1) * 26);
-  const sc = (0.72 + rand(i + 23) * 0.34).toFixed(3);
+  const dy = Math.round((rand(i) * 2 - 1) * 110);
+  const dx = Math.round((rand(i + 11) * 2 - 1) * 46);
+  const sc = (0.6 + rand(i + 23) * 0.35).toFixed(3);
   return `--dy:${dy}px;--dx:${dx}px;--sc:${sc}`;
 };
 ---
@@ -57,26 +57,28 @@ const jitter = (i: number) => {
       <span class="cvs__hint">滚动上下 · 移动跟随 · 按住拖拽 · 点开看大图</span>
     </div>
 
-    <div class="cvs__track" data-track>
-      {
-        items.map((it, i) => (
-          <button
-            class="cvs__tile"
-            type="button"
-            data-i={i}
-            style={`--r:${ratio(it)};${jitter(i)}`}
-            aria-label={it.title}
-          >
-            <span class="cvs__label mono">
-              <span>{it.serie.replace('系列', '')}</span>
-              <span>{no(i + 1)}</span>
-            </span>
-            <span class="cvs__ph">
-              <img src={it.src} alt={it.title} loading="lazy" decoding="async" draggable="false" />
-            </span>
-          </button>
-        ))
-      }
+    <div class="cvs__zoom" data-zoom>
+      <div class="cvs__track" data-track>
+        {
+          items.map((it, i) => (
+            <button
+              class="cvs__tile"
+              type="button"
+              data-i={i}
+              style={`--r:${ratio(it)};${jitter(i)}`}
+              aria-label={it.title}
+            >
+              <span class="cvs__label mono">
+                <span>{it.serie.replace('系列', '')}</span>
+                <span>{no(i + 1)}</span>
+              </span>
+              <span class="cvs__ph">
+                <img src={it.src} alt={it.title} loading="lazy" decoding="async" draggable="false" />
+              </span>
+            </button>
+          ))
+        }
+      </div>
     </div>
 
     <div class="cvs__foot mono">
@@ -105,9 +107,10 @@ const jitter = (i: number) => {
     function initCanvas() {
       const root = document.querySelector('[data-cvs]');
       const track = document.querySelector('[data-track]');
+      const zoomEl = document.querySelector('[data-zoom]');
       const posEl = document.querySelector('[data-cvs-pos]');
       const vw = document.querySelector('[data-cv]');
-      if (!root || !track || !vw) return;
+      if (!root || !track || !zoomEl || !vw) return;
       if (root.dataset.ready === '1') return;
       root.dataset.ready = '1';
 
@@ -129,6 +132,16 @@ const jitter = (i: number) => {
       let fromY = 0;
       let offAtX = 0;
       let offAtY = 0;
+      let vx = 0;
+      let vy = 0;
+      let lastX = 0;
+      let lastY = 0;
+      let lastT = 0;
+
+      const setZoom = (v) => {
+        zoomEl.style.setProperty('--z', v.toFixed(4));
+        scale = v;
+      };
 
       const maxY = () => Math.max(0, track.scrollHeight * scale - root.clientHeight);
       const maxX = () => Math.max(0, (track.scrollWidth * scale - root.clientWidth) / 2);
@@ -139,15 +152,30 @@ const jitter = (i: number) => {
       const render = (now) => {
         const dt = Math.min(64, now - prev) / 16.67; // 以 60fps 为 1 帧基准
         prev = now;
+
+        // 惯性：松手后按最后的速度继续滑，遇到边界就停
+        if (!down && (Math.abs(vx) > 0.06 || Math.abs(vy) > 0.06)) {
+          const nx2 = clampX(offX + vx * dt);
+          const ny2 = clampY(offY + vy * dt);
+          if (nx2 === offX) vx = 0;
+          if (ny2 === offY) vy = 0;
+          offX = nx2;
+          offY = ny2;
+          const f = Math.pow(0.93, dt);
+          vx *= f;
+          vy *= f;
+          if (Math.abs(vx) < 0.06) vx = 0;
+          if (Math.abs(vy) < 0.06) vy = 0;
+        }
+
         offX = clampX(offX);
         offY = clampY(offY);
         // 与刷新率无关的阻尼：144Hz 上不会「更快贴上去」
         const ease = (rate) => (reduce ? 1 : 1 - Math.pow(0.001, (dt * rate) / 10));
-        const k = ease(down ? 1.6 : 0.8);
+        const k = ease(down ? 1.7 : 0.9);
         x += (offX + driftX - x) * k;
         y += (offY + driftY - y) * k;
-        scale += (scaleT - scale) * ease(0.9);
-        track.style.transform = `translate3d(${x.toFixed(2)}px, ${y.toFixed(2)}px, 0) scale(${scale.toFixed(4)})`;
+        track.style.transform = `translate3d(${x.toFixed(2)}px, ${y.toFixed(2)}px, 0)`;
         if (posEl) {
           const total = Math.max(1, maxY());
           posEl.textContent = `${Math.round(Math.min(1, Math.max(0, -y / total)) * 100)}%`;
@@ -169,11 +197,16 @@ const jitter = (i: number) => {
         if (e.button !== 0) return;
         down = true;
         moved = 0;
+        vx = 0;
+        vy = 0;
         fromX = e.clientX;
         fromY = e.clientY;
+        lastX = e.clientX;
+        lastY = e.clientY;
+        lastT = performance.now();
         offAtX = offX;
         offAtY = offY;
-        scaleT = 0.955;
+        setZoom(0.95);
         root.classList.add('is-holding');
       });
 
@@ -186,6 +219,17 @@ const jitter = (i: number) => {
           offY = clampY(offAtY + dy * 0.9);
           driftX = 0;
           driftY = 0;
+
+          // 记录瞬时速度（每帧像素），松手后用来做惯性
+          const now = performance.now();
+          const dt = Math.max(8, now - lastT);
+          const ivx = ((e.clientX - lastX) / dt) * 16.67;
+          const ivy = ((e.clientY - lastY) / dt) * 16.67;
+          vx = vx * 0.6 + ivx * 0.4;
+          vy = vy * 0.6 + ivy * 0.4;
+          lastX = e.clientX;
+          lastY = e.clientY;
+          lastT = now;
           return;
         }
         // 360°：上下左右都跟着指针走
@@ -198,8 +242,13 @@ const jitter = (i: number) => {
       const release = () => {
         if (!down) return;
         down = false;
-        scaleT = 1;
+        setZoom(1);
         root.classList.remove('is-holding');
+        // 松手后若没怎么动（点击），不留惯性
+        if (moved <= 6) {
+          vx = 0;
+          vy = 0;
+        }
       };
       window.addEventListener('pointerup', release);
       window.addEventListener('pointercancel', release);
