@@ -255,24 +255,42 @@ import { practice } from '../data/practice';
       };
 
       let raf = 0;
-      let nextY = 0;
-      const apply = () => {
-        raf = 0;
+      let curY = 0;
+      let targetY = 0;
+      let inited = false;
+
+      const draw = (y: number) => {
         const stageH = list.offsetHeight;
         const boxH = peek.offsetHeight;
-        const y = nextY;
         const py = Math.max(0, Math.min(stageH - boxH, y - boxH / 2));
-        peek.style.setProperty('--py', `${Math.round(py)}px`);
-        // 带子按连续坐标滚：滚过接缝时两张图同时可见
+        peek.style.setProperty('--py', `${py.toFixed(2)}px`);
         const t = toFloat(y);
         strip.style.transform = `translate3d(0, ${(-t * boxH).toFixed(2)}px, 0)`;
       };
 
+      // 指数阻尼：不管刷新率多少，手感一致
+      const loop = () => {
+        const d = targetY - curY;
+        curY += d * 0.14;
+        if (Math.abs(d) < 0.25) {
+          curY = targetY;
+          draw(curY);
+          raf = 0;
+          return;
+        }
+        draw(curY);
+        raf = requestAnimationFrame(loop);
+      };
+
       list.addEventListener('pointermove', (e) => {
         const rect = list.getBoundingClientRect();
-        nextY = e.clientY - rect.top;
+        targetY = e.clientY - rect.top;
+        if (!inited) {
+          curY = targetY;
+          inited = true;
+        }
         peek.classList.add('is-on');
-        if (!raf) raf = requestAnimationFrame(apply);
+        if (!raf) raf = requestAnimationFrame(loop);
       });
       list.addEventListener('pointerenter', () => peek.classList.add('is-on'));
       list.addEventListener('pointerleave', () => peek.classList.remove('is-on'));
