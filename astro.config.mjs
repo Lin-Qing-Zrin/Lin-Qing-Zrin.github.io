@@ -10,4 +10,9 @@ export default defineConfig({
   },
   // 开发工具条会挡住页脚，关掉
   devToolbar: { enabled: false },
+  // 让手机通过临时隧道（trycloudflare）访问本地预览时不被 Vite 拒掉
+  vite: {
+    server: { host: true, allowedHosts: ['.trycloudflare.com'] },
+    preview: { host: true, allowedHosts: ['.trycloudflare.com'] },
+  },
 });
