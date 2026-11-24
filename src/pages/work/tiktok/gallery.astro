@@ -14,18 +14,30 @@ type Item = {
 const items = raw as Item[];
 const no = (n: number) => String(n).padStart(2, '0');
 const ratio = (it: Item) => (it.w / it.h).toFixed(4);
+
+// 固定的「散」：每个格子按索引给一点点错位和大小差，看起来不是网格
+const rand = (i: number) => {
+  const x = Math.sin(i * 12.9898) * 43758.5453;
+  return x - Math.floor(x);
+};
+const jitter = (i: number) => {
+  const dy = Math.round((rand(i) * 2 - 1) * 62);
+  const dx = Math.round((rand(i + 11) * 2 - 1) * 26);
+  const sc = (0.72 + rand(i + 23) * 0.34).toFixed(3);
+  return `--dy:${dy}px;--dx:${dx}px;--sc:${sc}`;
+};
 ---
 
 <Base
   title="TikTok — Gallery · 刘启征"
-  description="47 条自发影像，平铺成一张可以推拉的画布。"
+  description="47 条自发影像，铺成一张可以推拉的画布。"
   bare
 >
   <div class="cvs" data-cvs>
     <div class="cvs__head mono">
       <a class="cvs__back" href="/work/tiktok/" data-cursor="hover">← TikTok</a>
       <span class="cvs__meta">Gallery · {items.length} pieces</span>
-      <span class="cvs__hint">滚动上下 · 移动左右 · 按住拖拽</span>
+      <span class="cvs__hint">滚动上下 · 移动左右 · 按住拖拽 · 点开看大图</span>
     </div>
 
     <div class="cvs__track" data-track>
@@ -35,13 +47,21 @@ const ratio = (it: Item) => (it.w / it.h).toFixed(4);
             class="cvs__tile"
             type="button"
             data-i={i}
-            style={`--r:${ratio(it)}`}
+            style={`--r:${ratio(it)};${jitter(i)}`}
             aria-label={it.title}
           >
-            <img src={it.src} alt={it.title} loading="lazy" decoding="async" />
-            <span class="cvs__cap mono">
-              <b>{no(i + 1)}</b>
-              {it.title}
+            <span class="cvs__label mono">
+              <span>{it.serie.replace('系列', '')}</span>
+              <span>{no(i + 1)}</span>
+            </span>
+            <span class="cvs__ph">
+              <img
+                src={it.src}
+                alt={it.title}
+                loading="lazy"
+                decoding="async"
+                draggable="false"
+              />
             </span>
           </button>
         ))
@@ -50,22 +70,38 @@ const ratio = (it: Item) => (it.w / it.h).toFixed(4);
 
     <div class="cvs__foot mono">
       <span>刘启征 · 抖音帐号</span>
-      <span data-cvs-pos>00 / 47</span>
+      <span data-cvs-pos>0%</span>
     </div>
   </div>
 
-  <script>
+  <div class="cvs-viewer" data-cv>
+    <div class="cvs-viewer__bar mono">
+      <span data-cv-count>—</span>
+      <span data-cv-meta>—</span>
+      <button class="cvs-viewer__close" type="button" data-cv-close>Close ✕</button>
+    </div>
+    <div class="cvs-viewer__stage">
+      <img data-cv-img alt="" decoding="async" />
+    </div>
+    <div class="cvs-viewer__foot mono">
+      <button class="cvs-viewer__nav" type="button" data-cv-prev>← Prev</button>
+      <span data-cv-name>—</span>
+      <button class="cvs-viewer__nav" type="button" data-cv-next>Next →</button>
+    </div>
+  </div>
+
+  <script define:vars={{ items }}>
     function initCanvas() {
-      const root = document.querySelector<HTMLElement>('[data-cvs]');
-      const track = document.querySelector<HTMLElement>('[data-track]');
-      const pos = document.querySelector<HTMLElement>('[data-cvs-pos]');
-      if (!root || !track) return;
+      const root = document.querySelector('[data-cvs]');
+      const track = document.querySelector('[data-track]');
+      const pos = document.querySelector('[data-cvs-pos]');
+      const vw = document.querySelector('[data-cv]');
+      if (!root || !track || !vw) return;
       if (root.dataset.ready === '1') return;
       root.dataset.ready = '1';
 
       const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-      // 目标值与当前值：全部走 rAF + lerp，保证丝滑
       let x = 0;
       let y = 0;
       let z = 1;
@@ -74,62 +110,59 @@ const ratio = (it: Item) => (it.w / it.h).toFixed(4);
       let zt = 1;
 
       let holding = false;
+      let moved = 0;
       let dragFromX = 0;
       let dragFromY = 0;
       let xAtDrag = 0;
       let yAtDrag = 0;
 
-      const minY = () => {
-        const over = track.scrollHeight - root.clientHeight;
-        return Math.min(0, -Math.max(0, over));
-      };
-      const maxX = () => {
-        const over = track.scrollWidth - root.clientWidth;
-        return Math.max(0, over / 2);
-      };
-      const clampY = (v) => Math.max(minY(), Math.min(0, v));
-      const clampX = (v) => Math.max(-maxX(), Math.min(maxX(), v));
+      const maxScrollY = () => Math.max(0, track.scrollHeight * z - root.clientHeight);
+      const maxShiftX = () => Math.max(0, (track.scrollWidth * z - root.clientWidth) / 2);
+      const clampY = (v) => Math.max(-maxScrollY(), Math.min(0, v));
+      const clampX = (v) => Math.max(-maxShiftX(), Math.min(maxShiftX(), v));
 
       const frame = () => {
-        const k = reduce ? 1 : 0.09;
+        const k = reduce ? 1 : 0.085;
         x += (xt - x) * k;
         y += (yt - y) * k;
-        z += (zt - z) * (reduce ? 1 : 0.14);
+        z += (zt - z) * (reduce ? 1 : 0.12);
         track.style.transform = `translate3d(${x.toFixed(2)}px, ${y.toFixed(2)}px, 0) scale(${z.toFixed(4)})`;
         if (pos) {
-          const total = Math.max(1, track.scrollHeight - root.clientHeight);
-          const pct = Math.min(100, Math.round((-y / total) * 100));
-          pos.textContent = `${String(pct).padStart(2, '0')} / 47`;
+          const total = Math.max(1, maxScrollY());
+          const pct = Math.round(Math.min(1, Math.max(0, -y / total)) * 100);
+          pos.textContent = `${pct}%`;
         }
         requestAnimationFrame(frame);
       };
       requestAnimationFrame(frame);
 
-      // 滚轮 = 上下平移（不缩放）
       root.addEventListener(
         'wheel',
         (e) => {
           e.preventDefault();
-          yt = clampY(yt - e.deltaY * 0.9);
+          yt = clampY(yt - e.deltaY * 0.85);
         },
         { passive: false }
       );
 
-      // 单纯移动 = 小幅左右平移
       root.addEventListener('pointermove', (e) => {
         if (holding) {
+          moved = Math.max(
+            moved,
+            Math.abs(e.clientX - dragFromX) + Math.abs(e.clientY - dragFromY)
+          );
           xt = clampX(xAtDrag + (e.clientX - dragFromX) * 0.8);
           yt = clampY(yAtDrag + (e.clientY - dragFromY) * 0.8);
           return;
         }
         const k = (e.clientX / window.innerWidth - 0.5) * 2;
-        xt = clampX(-k * 60);
+        xt = clampX(-k * 70);
       });
 
-      // 按住 = 轻微缩小，然后可以左右拖
       root.addEventListener('pointerdown', (e) => {
         holding = true;
-        zt = 0.965;
+        moved = 0;
+        zt = 0.962;
         dragFromX = e.clientX;
         dragFromY = e.clientY;
         xAtDrag = x;
@@ -138,11 +171,12 @@ const ratio = (it: Item) => (it.w / it.h).toFixed(4);
         try {
           root.setPointerCapture(e.pointerId);
         } catch {
-          /* 旧浏览器忽略 */
+          /* 忽略 */
         }
       });
 
       const release = () => {
+        if (!holding) return;
         holding = false;
         zt = 1;
         root.classList.remove('is-holding');
@@ -155,9 +189,54 @@ const ratio = (it: Item) => (it.w / it.h).toFixed(4);
         if (!holding) xt = 0;
       });
 
+      // ---- 查看器 ----
+      const vImg = vw.querySelector('[data-cv-img]');
+      const vName = vw.querySelector('[data-cv-name]');
+      const vMeta = vw.querySelector('[data-cv-meta]');
+      const vCount = vw.querySelector('[data-cv-count]');
+      let cur = 0;
+
+      const open = (i) => {
+        cur = (i + items.length) % items.length;
+        const it = items[cur];
+        vImg.src = it.src;
+        vImg.alt = it.title;
+        vName.textContent = it.title;
+        vMeta.textContent = `${it.serie.replace('系列', '')} · ${it.w}×${it.h}`;
+        vCount.textContent = `${cur + 1} / ${items.length}`;
+        vw.classList.add('is-on');
+        document.documentElement.classList.add('is-locked');
+      };
+      const close = () => {
+        vw.classList.remove('is-on');
+        document.documentElement.classList.remove('is-locked');
+      };
+
+      if (!root.dataset.click) {
+        root.dataset.click = '1';
+        root.addEventListener('click', (e) => {
+          const tile = e.target.closest('.cvs__tile');
+          if (!tile) return;
+          if (moved > 8) return; // 拖动过就不算点击
+          open(Number(tile.dataset.i));
+        });
+        vw.addEventListener('click', (e) => {
+          const t = e.target;
+          if (t.closest('[data-cv-prev]')) return open(cur - 1);
+          if (t.closest('[data-cv-next]')) return open(cur + 1);
+          if (t.closest('[data-cv-close]') || t === vw) close();
+        });
+      }
+
       if (!window.__cvsKeys) {
         window.__cvsKeys = true;
         window.addEventListener('keydown', (e) => {
+          if (vw.classList.contains('is-on')) {
+            if (e.key === 'Escape') close();
+            if (e.key === 'ArrowLeft') open(cur - 1);
+            if (e.key === 'ArrowRight') open(cur + 1);
+            return;
+          }
           if (e.key === 'Escape') window.location.href = '/work/tiktok/';
         });
       }
