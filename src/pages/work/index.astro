@@ -1,28 +1,47 @@
 ---
 import Base from '../../layouts/Base.astro';
-import WorkRows from '../../components/WorkRows.astro';
 import GhostWord from '../../components/GhostWord.astro';
-import { getCollection } from 'astro:content';
+import { categories } from '../../data/categories';
 
-const works = (await getCollection('works')).sort((a, b) => a.data.order - b.data.order);
-const years = works.map((w) => w.data.year);
-const span = years.length ? `${Math.min(...years)}–${Math.max(...years)}` : '';
+const total = categories.reduce((n, c) => n + c.count, 0);
+const openable = categories.filter((c) => c.status === 'open').length;
 ---
 
 <Base
   title="Work — 刘启征"
-  description="Selected work: AI films, game worlds, VFX, product UI and the account that publishes them."
+  description="Work by category: TikTok, AI film, game, 3D/VFX, product UI, identity, poster."
 >
   <section class="page-head wrap">
     <GhostWord text="Work" />
-    <h1 class="t-display">
+    <h1 class="t-h1">
       <span class="line-mask"><span style="--i:0">Work</span></span>
     </h1>
-    <p class="t-meta" data-reveal style="--d:1">{works.length} projects · {span}</p>
-    <p class="cn" data-reveal style="--d:2">共 {works.length} 件作品 · {span}</p>
+    <p class="t-meta" data-reveal style="--d:1">
+      {categories.length} categories · {total} pieces · {openable} open
+    </p>
+    <p class="cn" data-reveal style="--d:2">{categories.length} 个大类 · 共 {total} 件 · 已开放 {openable} 个</p>
   </section>
 
   <section class="wrap" style="padding-bottom: clamp(64px, 10vw, 160px)">
-    <WorkRows items={works} />
+    <nav class="cat-list" aria-label="作品分类">
+      {
+        categories.map((c) => (
+          <a
+            class:list={['cat-row', `cat-row--${c.status}`]}
+            href={c.status === 'open' ? `/work/${c.slug}/` : undefined}
+            aria-disabled={c.status === 'soon' ? 'true' : undefined}
+            data-reveal
+          >
+            <span class="cat-row__no">{c.no}</span>
+            <span class="cat-row__name">
+              <span class="cat-row__en">{c.en}</span>
+              <span class="cat-row__cn">{c.cn}</span>
+            </span>
+            <span class="cat-row__meta">{c.count} {c.count === 1 ? 'piece' : 'pieces'}</span>
+            <span class="cat-row__state">{c.status === 'open' ? 'Open →' : 'Soon'}</span>
+          </a>
+        ))
+      }
+    </nav>
   </section>
 </Base>

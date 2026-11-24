@@ -214,3 +214,22 @@ git push -u origin main
 | 跑马灯 | 悬停 | 暂停 | .ticker:hover .ticker__track |
 | 导航 | 悬停 | 细线从左长出 | .nav a::after + scaleX |
 | 四角 | — | 取景框角标（仅桌面） | .marks 四个 span |
+
+### 作品分类结构（2026-11 起）
+
+/work/ 不再是一串单件作品，而是**按大类分的目录**：
+
+| # | 目录 | 对应文件夹 | 状态 |
+| --- | --- | --- | --- |
+| 01 | TikTok / 抖音帐号 | 个人作品集图片\抖音帐号 | **已开放**（47 件，7 个系列） |
+| 02 | AI Film / AI 影像 | i视频制作 | Soon |
+| 03 | Game / 游戏开发 | 游戏开发 | Soon |
+| 04 | 3D & VFX / 特效 | — | Soon |
+| 05 | Product UI / 交互设计 | UI交互设计 | Soon |
+| 06 | Identity / 品牌设计 | LOGO设计 | Soon |
+| 07 | Poster / 海报 | 海报 | Soon |
+
+- 目录数据在 `src/data/categories.ts`；status: 'open' 才会渲染成可点链接，soon 是 pointer-events:none + 0.38 透明。
+- 已开放的大类各自一个页面（目前只有 `src/pages/work/tiktok.astro`）：顶部 .case-bar 三栏（ 1 / 07 · Self-media · 抖音帐号 · 47 pieces）、大字英文标题 + 中文小字、系列筛选 chips、条目行（序号 / 缩略图 / 标题 / 系列 / 尺寸）、点击进全屏 viewer（← → 翻页、Esc 关闭、锁滚动）。
+- 图片清单在 `src/data/tiktok.json`（serie / serieSlug / title / src / w / h），缩略图是同一张 webp，浏览器按尺寸缩放。
+- 旧的 6 个单件作品详情页（`/work/<slug>/`）还在仓库里，但已不在目录中链接——等大类的作品全部就位后再决定是否保留。

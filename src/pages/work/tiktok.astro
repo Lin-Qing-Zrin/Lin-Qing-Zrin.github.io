@@ -1,0 +1,185 @@
+---
+import Base from '../../layouts/Base.astro';
+import GhostWord from '../../components/GhostWord.astro';
+import raw from '../../data/tiktok.json';
+
+type Item = {
+  serie: string;
+  serieSlug: string;
+  title: string;
+  src: string;
+  w: number;
+  h: number;
+};
+
+const items = raw as Item[];
+const series: { slug: string; name: string; count: number }[] = [];
+for (const it of items) {
+  const hit = series.find((s) => s.slug === it.serieSlug);
+  if (hit) hit.count += 1;
+  else series.push({ slug: it.serieSlug, name: it.serie, count: 1 });
+}
+const no = (n: number) => String(n).padStart(2, '0');
+const total = items.length;
+---
+
+<Base
+  title="TikTok 抖音帐号 — 刘启征"
+  description="47 条自发影像，分七个系列：古韵江南、地球脉动、治愈风景、建筑教学、MC·光遇、二次元、红色。"
+>
+  <section class="page-head wrap">
+    <GhostWord text="TikTok" />
+    <div class="case-bar mono" data-reveal>
+      <span>01 / 07</span>
+      <span>Self-media · 抖音帐号</span>
+      <span>{total} pieces</span>
+    </div>
+    <h1 class="tk-h1">
+      <span class="line-mask"><span style="--i:0">TikTok</span></span>
+    </h1>
+    <p class="t-meta" data-reveal style="--d:1">抖音帐号 · {series.length} 个系列 · {total} 条</p>
+    <p class="cn" data-reveal style="--d:2">
+      一个人跑完选题、出图、剪辑和发布。下面按系列归档，点任意一条看原图，左右键翻页。
+    </p>
+  </section>
+
+  <section class="wrap" style="padding-bottom: clamp(64px, 10vw, 160px)">
+    <div class="chips" data-chips>
+      <button class="chip is-active" data-chip="all" type="button">
+        All <span class="chip__n">{total}</span>
+      </button>
+      {
+        series.map((s) => (
+          <button class="chip" data-chip={s.slug} type="button">
+            {s.name.replace('系列', '')} <span class="chip__n">{s.count}</span>
+          </button>
+        ))
+      }
+    </div>
+
+    <div class="tk-list" data-tk-list>
+      {
+        items.map((it, i) => (
+          <button
+            class="tk-row"
+            type="button"
+            data-serie={it.serieSlug}
+            data-src={it.src}
+            data-name={it.title}
+            data-meta={`${it.serie.replace('系列', '')} · ${it.w}×${it.h}`}
+          >
+            <span class="tk-row__idx">{no(i + 1)}</span>
+            <span class="tk-row__thumb">
+              <img src={it.src} alt={it.title} loading="lazy" decoding="async" />
+            </span>
+            <span class="tk-row__title">{it.title}</span>
+            <span class="tk-row__serie">{it.serie.replace('系列', '')}</span>
+            <span class="tk-row__dim">
+              {it.w}×{it.h}
+            </span>
+          </button>
+        ))
+      }
+    </div>
+  </section>
+
+  <div class="viewer" data-viewer>
+    <div class="viewer__bar mono">
+      <span data-viewer-count>—</span>
+      <span data-viewer-meta>—</span>
+      <button class="viewer__close" type="button" data-viewer-close>Close ✕</button>
+    </div>
+    <figure class="viewer__stage">
+      <img data-viewer-img alt="" decoding="async" />
+    </figure>
+    <div class="viewer__foot mono">
+      <button class="viewer__nav" type="button" data-viewer-prev>← Prev</button>
+      <span data-viewer-name class="viewer__name">—</span>
+      <button class="viewer__nav" type="button" data-viewer-next>Next →</button>
+    </div>
+  </div>
+
+  <script>
+    type W = Window & { __tkBound?: boolean };
+
+    function initTiktok() {
+      const root = document.querySelector<HTMLElement>('[data-tk-list]');
+      if (!root) return;
+
+      const rows = Array.from(root.querySelectorAll<HTMLButtonElement>('.tk-row'));
+      const chips = Array.from(document.querySelectorAll<HTMLButtonElement>('[data-chip]'));
+      const viewer = document.querySelector<HTMLElement>('[data-viewer]');
+      const vImg = document.querySelector<HTMLImageElement>('[data-viewer-img]');
+      const vName = document.querySelector<HTMLElement>('[data-viewer-name]');
+      const vMeta = document.querySelector<HTMLElement>('[data-viewer-meta]');
+      const vCount = document.querySelector<HTMLElement>('[data-viewer-count]');
+
+      let pool: HTMLButtonElement[] = rows.slice();
+      let cursor = 0;
+
+      const open = (i: number) => {
+        if (!viewer || !vImg || !pool.length) return;
+        cursor = (i + pool.length) % pool.length;
+        const row = pool[cursor];
+        vImg.src = row.dataset.src ?? '';
+        vImg.alt = row.dataset.name ?? '';
+        if (vName) vName.textContent = row.dataset.name ?? '';
+        if (vMeta) vMeta.textContent = row.dataset.meta ?? '';
+        if (vCount) vCount.textContent = `${cursor + 1} / ${pool.length}`;
+        viewer.classList.add('is-on');
+        document.documentElement.classList.add('is-locked');
+      };
+
+      const close = () => {
+        viewer?.classList.remove('is-on');
+        document.documentElement.classList.remove('is-locked');
+      };
+
+      chips.forEach((chip) => {
+        if (chip.dataset.chipBound) return;
+        chip.dataset.chipBound = '1';
+        chip.addEventListener('click', () => {
+          const want = chip.dataset.chip ?? 'all';
+          chips.forEach((c) => c.classList.toggle('is-active', c === chip));
+          rows.forEach((r) => {
+            const show = want === 'all' || r.dataset.serie === want;
+            r.classList.toggle('is-hidden', !show);
+          });
+          pool = rows.filter((r) => !r.classList.contains('is-hidden'));
+        });
+      });
+
+      rows.forEach((row, i) => {
+        row.addEventListener('click', () => open(pool.indexOf(row)));
+        row.addEventListener('pointerenter', () => {
+          const idx = pool.indexOf(row);
+          if (idx < 0) return;
+        });
+        void i;
+      });
+
+      if (viewer && !viewer.dataset.bound) {
+        viewer.dataset.bound = '1';
+        viewer.addEventListener('click', (e) => {
+          const t = e.target as HTMLElement;
+          if (t.closest('[data-viewer-prev]')) return open(cursor - 1);
+          if (t.closest('[data-viewer-next]')) return open(cursor + 1);
+          if (t.closest('[data-viewer-close]') || t === viewer) close();
+        });
+      }
+
+      if (!(window as W).__tkBound) {
+        (window as W).__tkBound = true;
+        window.addEventListener('keydown', (e) => {
+          if (!viewer?.classList.contains('is-on')) return;
+          if (e.key === 'Escape') close();
+          if (e.key === 'ArrowLeft') open(cursor - 1);
+          if (e.key === 'ArrowRight') open(cursor + 1);
+        });
+      }
+    }
+
+    document.addEventListener('astro:page-load', initTiktok);
+    initTiktok();
+  </script>
+</Base>
