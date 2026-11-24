@@ -16,7 +16,7 @@ const chips = [
     <header class="id-head mono">
       <a href="/work/">← WORK</a>
       <span>06 / 07 · IDENTITY · 品牌设计</span>
-      <span>1 PIECE</span>
+      <span>3 PROJECTS</span>
     </header>
 
     <div class="id-intro">
@@ -66,6 +66,46 @@ const chips = [
         </p>
       </div>
     </div>
+
+    <section class="id-more" aria-label="同一类的其它作品">
+      <div class="id-more__head mono">
+        <span>PROJECT 02 — 文创品牌</span>
+        <span>不偏 · 书签</span>
+      </div>
+      <div class="id-duo">
+        <figure class="id-duo__item">
+          <img src="/images/identity/bupian-product.webp" alt="不偏书签 产品展示" loading="lazy" />
+          <figcaption class="mono">01 · PRODUCT — 一盒书签，一张心思</figcaption>
+        </figure>
+        <figure class="id-duo__item">
+          <img src="/images/identity/bupian-structure.webp" alt="不偏书签 结构设计" loading="lazy" />
+          <figcaption class="mono">02 · STRUCTURE — 折一次，夹一次</figcaption>
+        </figure>
+      </div>
+
+      <div class="id-more__head mono">
+        <span>PROJECT 03 — 印刷 / 视觉</span>
+        <a href="/work/poster/">全部 18 张海报 →</a>
+      </div>
+      <div class="id-strip">
+        <a class="id-strip__item" href="/work/poster/">
+          <img src="/images/poster/p01.webp" alt="渡口" loading="lazy" />
+          <span class="mono">渡口 · 参赛</span>
+        </a>
+        <a class="id-strip__item" href="/work/poster/">
+          <img src="/images/poster/p02.webp" alt="幕影" loading="lazy" />
+          <span class="mono">幕影 · 参赛</span>
+        </a>
+        <a class="id-strip__item" href="/work/poster/">
+          <img src="/images/poster/p04.webp" alt="香水产品设计" loading="lazy" />
+          <span class="mono">竹间观云 · 产品</span>
+        </a>
+        <a class="id-strip__item" href="/work/poster/">
+          <img src="/images/poster/p09.webp" alt="定风波" loading="lazy" />
+          <span class="mono">定风波 · 水墨</span>
+        </a>
+      </div>
+    </section>
 
     <footer class="id-foot mono">
       <span>ILLUSTRATOR · 手工构造 · 单色可用</span>
@@ -324,5 +364,86 @@ const chips = [
 
   .id-head > span:last-child {
     margin-right: 104px;
+  }
+  /* ---------- 同一栏目的其它作品 ---------- */
+  .id-more {
+    padding-top: clamp(36px, 5vw, 72px);
+  }
+  .id-more__head {
+    display: flex;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 18px 0 14px;
+    border-top: 1px solid var(--line);
+    font-size: 10px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--gray);
+  }
+  .id-more__head + .id-duo {
+    margin-top: 0;
+  }
+  .id-duo {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: clamp(14px, 2vw, 28px);
+  }
+  .id-duo__item {
+    margin: 0;
+  }
+  .id-duo__item img {
+    display: block;
+    width: 100%;
+    height: auto;
+    background: #141311;
+    border: 1px solid var(--line);
+  }
+  .id-duo__item figcaption {
+    margin-top: 10px;
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--gray);
+  }
+  .id-strip {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: clamp(12px, 1.6vw, 22px);
+  }
+  .id-strip__item {
+    display: block;
+    text-decoration: none;
+  }
+  .id-strip__item img {
+    display: block;
+    width: 100%;
+    aspect-ratio: 3 / 4;
+    object-fit: cover;
+    background: #141311;
+    border: 1px solid var(--line);
+    filter: saturate(0.9);
+    transition: filter 0.4s var(--ease), transform 0.4s var(--ease);
+  }
+  .id-strip__item:hover img {
+    filter: saturate(1.1);
+    transform: translateY(-3px);
+  }
+  .id-strip__item span {
+    display: block;
+    margin-top: 9px;
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    color: var(--gray);
+  }
+  .id-strip__item:hover span {
+    color: var(--ink);
+  }
+  @media (max-width: 900px) {
+    .id-duo {
+      grid-template-columns: 1fr;
+    }
+    .id-strip {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
   }
 </style>

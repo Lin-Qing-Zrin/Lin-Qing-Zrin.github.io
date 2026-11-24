@@ -37,9 +37,9 @@ export const categories: Category[] = [
     slug: 'game',
     en: 'Game',
     cn: '游戏开发',
-    count: 1,
+    count: 2,
     status: 'open',
-    blurb: '虚幻引擎 5 里的一关：竹林、山门、一场战斗。',
+    blurb: '一个能直接玩的小游戏，加一关还在搭的虚幻引擎关卡。',
   },
   {
     no: '04',
@@ -64,9 +64,9 @@ export const categories: Category[] = [
     slug: 'identity',
     en: 'Identity',
     cn: '品牌设计',
-    count: 1,
+    count: 3,
     status: 'open',
-    blurb: '日月几何字标。按 G 看构造网格。',
+    blurb: '日月几何字标、不偏书签文创，以及四张印刷稿。',
   },
   {
     no: '07',

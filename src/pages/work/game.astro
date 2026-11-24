@@ -49,10 +49,60 @@ const stages = [
   title="Game — 刘启征"
   description="An in-progress Wuxia action level built in Unreal Engine 5: bamboo forest, mountain gate, one fight."
 >
-  <section class="lv" data-lv>
-    <header class="lv-head mono">
+  <section class="gm" id="moyu">
+    <header class="gm-head mono">
       <a href="/work/">← WORK</a>
       <span>03 / 07 · GAME · 游戏开发</span>
+      <span>02 PROJECTS</span>
+    </header>
+
+    <div class="gm-body">
+      <div class="gm-copy">
+        <p class="mono gm-kicker">PROJECT 01 — 比赛作品</p>
+        <h1 class="gm-title">摸鱼接接乐</h1>
+        <p class="gm-sub">3D 涂鸦风接零食小游戏 · Qoder 高校创造力大赛参赛作品</p>
+        <p class="gm-desc">
+          数学课上假装听课，实际在接同桌扔过来的零食。薯片 10 分、辣条 20 分、奶茶 30 分，粉笔头和纸条会害你被抓；吃到螺蛳粉能封住老师的鼻子 4 秒。一局 90 秒，被抓三次就下课。
+        </p>
+        <div class="gm-actions">
+          <a class="btn btn--solid" href="https://moyu-snack-catch-y41giak4see.qoder.zone" target="_blank" rel="noopener">
+            在线试玩 ↗
+          </a>
+          <button class="btn" type="button" data-embed>网页里直接玩</button>
+        </div>
+        <dl class="gm-facts mono">
+          <div><dt>YEAR</dt><dd>2026</dd></div>
+          <div><dt>TYPE</dt><dd>Browser · 3D</dd></div>
+          <div><dt>STACK</dt><dd>Three.js · Three 场景手搭</dd></div>
+          <div><dt>ROLE</dt><dd>玩法 · 建模 · 代码 · 音效</dd></div>
+        </dl>
+      </div>
+
+      <figure class="gm-cover">
+        <img src="/images/game/moyu.webp" alt="摸鱼接接乐 游戏画面" />
+        <figcaption class="mono">SCREENSHOT · 摸鱼接接乐 · 课堂现场</figcaption>
+      </figure>
+    </div>
+
+    <div class="gm-embed" data-embed-frame hidden>
+      <div class="gm-embed__bar mono">
+        <span>摸鱼接接乐 · 在线运行</span>
+        <button type="button" data-embed-close>关闭 ×</button>
+      </div>
+      <iframe
+        title="摸鱼接接乐"
+        src="about:blank"
+        data-src="https://moyu-snack-catch-y41giak4see.qoder.zone"
+        loading="lazy"
+        allowfullscreen
+      ></iframe>
+    </div>
+  </section>
+
+  <section class="lv" data-lv>
+    <header class="lv-head mono">
+      <span>PROJECT 02 — 进行中</span>
+      <span>03 / 07 · GAME</span>
       <span>IN PROGRESS</span>
     </header>
 
@@ -108,6 +158,20 @@ const stages = [
   </section>
 
   <script>
+    // 摸鱼接接乐：点"网页里直接玩"才加载 iframe（3D 游戏很重，不提前占带宽）
+    const embedBox = document.querySelector<HTMLElement>('[data-embed-frame]');
+    const embedIframe = embedBox?.querySelector<HTMLIFrameElement>('iframe');
+    document.querySelector('[data-embed]')?.addEventListener('click', () => {
+      if (!embedBox || !embedIframe) return;
+      const src = embedIframe.dataset.src;
+      if (src && embedIframe.src === 'about:blank') embedIframe.src = src;
+      embedBox.hidden = false;
+      embedBox.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    });
+    document.querySelector('[data-embed-close]')?.addEventListener('click', () => {
+      if (embedBox) embedBox.hidden = true;
+    });
+
     const root = document.querySelector('[data-lv]');
     if (root) {
       const steps = [...root.querySelectorAll('[data-step]')];
@@ -347,5 +411,138 @@ const stages = [
 
   .lv-head > span:last-child {
     margin-right: 104px;
+  }
+  /* ---------- 摸鱼接接乐（项目 01） ---------- */
+  .gm {
+    padding: clamp(84px, 9vw, 120px) var(--pad) clamp(40px, 6vw, 80px);
+  }
+  .gm-head {
+    display: flex;
+    justify-content: space-between;
+    gap: 16px;
+    padding-bottom: 18px;
+    border-bottom: 1px solid var(--line);
+    font-size: 10px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--gray);
+  }
+  .gm-head > span:last-child {
+    margin-right: 104px;
+  }
+  .gm-body {
+    display: grid;
+    grid-template-columns: minmax(0, 0.92fr) minmax(0, 1.08fr);
+    gap: clamp(28px, 4vw, 64px);
+    align-items: start;
+    padding-top: clamp(28px, 4vw, 52px);
+  }
+  .gm-kicker {
+    color: var(--accent);
+    font-size: 10px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+  }
+  .gm-title {
+    margin-top: 12px;
+    font-family: var(--font-serif);
+    font-weight: 900;
+    font-size: clamp(44px, 6.4vw, 92px);
+    line-height: 0.95;
+    letter-spacing: 0.01em;
+  }
+  .gm-sub {
+    margin-top: 14px;
+    font-size: 15px;
+    color: var(--ink-2);
+  }
+  .gm-desc {
+    margin-top: 18px;
+    max-width: 46ch;
+    font-size: 15px;
+    line-height: 1.8;
+    color: var(--ink-2);
+  }
+  .gm-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-top: 24px;
+  }
+  .gm-facts {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 16px 24px;
+    margin-top: 30px;
+    padding-top: 20px;
+    border-top: 1px solid var(--line);
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+  }
+  .gm-facts dt {
+    color: var(--gray);
+  }
+  .gm-facts dd {
+    margin: 6px 0 0;
+    color: var(--ink);
+    text-transform: none;
+    letter-spacing: 0.02em;
+    font-size: 12px;
+  }
+  .gm-cover {
+    margin: 0;
+  }
+  .gm-cover img {
+    display: block;
+    width: 100%;
+    height: auto;
+    border: 1px solid var(--line);
+  }
+  .gm-cover figcaption {
+    margin-top: 10px;
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--gray);
+  }
+  .gm-embed {
+    margin-top: clamp(24px, 4vw, 44px);
+    border: 1px solid var(--line);
+    background: #080807;
+  }
+  .gm-embed__bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 14px;
+    font-size: 10px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--gray);
+    border-bottom: 1px solid var(--line);
+  }
+  .gm-embed__bar button {
+    color: var(--ink-2);
+  }
+  .gm-embed__bar button:hover {
+    color: var(--accent);
+  }
+  .gm-embed iframe {
+    display: block;
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    border: 0;
+  }
+  @media (max-width: 900px) {
+    .gm-head > span:last-child {
+    margin-right: 104px;
+  }
+  .gm-body {
+      grid-template-columns: 1fr;
+    }
+    .gm-cover {
+      order: -1;
+    }
   }
 </style>

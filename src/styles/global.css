@@ -1339,7 +1339,8 @@ html.no-preloader .preloader {
   letter-spacing: 0.01em;
   line-height: 0.9;
   color: transparent;
-  -webkit-text-stroke: clamp(2.2px, 0.23vw, 3.4px) var(--ink);
+  /* 用 em：字号越小描边越细，手机上才看得出是空心字 */
+  -webkit-text-stroke: 0.018em var(--ink);
 }
 /* 叠一层实心副本，用半径为 --fr 的圆做遮罩：指针附近才"填"进来 */
 .hero__fill {
@@ -2242,7 +2243,7 @@ html.is-locked {
   font-family: var(--font-serif);
   font-weight: 900;
   letter-spacing: 0.01em;
-  -webkit-text-stroke: 2.2px var(--ink);
+  -webkit-text-stroke: 0.018em var(--ink);
   background-image: repeating-linear-gradient(
     92deg,
     rgba(215, 255, 63, 0.2) 0 2px,
@@ -2370,4 +2371,9 @@ html.is-locked {
   z-index: 30;
   pointer-events: none;
   background: linear-gradient(to bottom, var(--bg) 58%, rgba(12, 12, 12, 0));
+}
+@media (max-width: 640px) {
+  .hero__name {
+    -webkit-text-stroke-width: 0.026em;
+  }
 }
