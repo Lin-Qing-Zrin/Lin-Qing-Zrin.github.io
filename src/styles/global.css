@@ -2162,3 +2162,59 @@ html.is-locked {
   color: var(--accent);
   border-color: var(--line);
 }
+/* 里程表：只滚动变化的字符 */
+.odo {
+  display: inline-block;
+  white-space: pre;
+}
+@keyframes odo-in {
+  from {
+    transform: translateY(0.72em);
+    opacity: 0;
+    filter: blur(1.4px);
+  }
+  to {
+    transform: none;
+    opacity: 1;
+    filter: none;
+  }
+}
+.odo.is-in {
+  animation: odo-in 0.34s var(--ease) both;
+}
+
+/* 首屏拆解：名字飞进左上角导航 */
+.fly-name {
+  position: fixed;
+  left: 0;
+  top: 0;
+  z-index: 70;
+  pointer-events: none;
+  opacity: 0;
+  white-space: nowrap;
+  line-height: 1;
+  color: var(--ink);
+  font-family: var(--font-display);
+  letter-spacing: -0.045em;
+  transform-origin: left top;
+  will-change: transform, opacity;
+}
+@media (prefers-reduced-motion: reduce) {
+  .fly-name {
+    display: none;
+  }
+  .odo.is-in {
+    animation: none;
+  }
+}
+/* 首屏钉住，后面的内容滑上来盖住它（拆解后的收尾） */
+.hero--instrument {
+  position: sticky;
+  top: 0;
+  z-index: 0;
+}
+.section {
+  position: relative;
+  z-index: 2;
+  background: var(--bg);
+}

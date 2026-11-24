@@ -221,6 +221,27 @@ const {
       }
 
       /* ------------------------------------------------------------
+         里程表：只让变化的字符滚动，其它字符原地不动
+         ------------------------------------------------------------ */
+      function rollTo(el: HTMLElement, next: string) {
+        if (el.dataset.v === next) return;
+        const prev = el.dataset.v ?? '';
+        el.dataset.v = next;
+        if (reduceMotion) {
+          el.textContent = next;
+          return;
+        }
+        let html = '';
+        for (let i = 0; i < next.length; i++) {
+          const ch = next[i] === ' ' ? '&nbsp;' : next[i];
+          const same = prev[i] === next[i];
+          html += `<span class="odo${same ? '' : ' is-in'}">${ch}</span>`;
+        }
+        el.innerHTML = html;
+      }
+      (window as Window & { dsRoll?: typeof rollTo }).dsRoll = rollTo;
+
+      /* ------------------------------------------------------------
          页脚本地时间
          ------------------------------------------------------------ */
       function initClock() {
@@ -238,7 +259,7 @@ const {
             new Intl.DateTimeFormat('en-US', { timeZone: 'Asia/Shanghai', timeZoneName: 'short' })
               .formatToParts(now)
               .find((p) => p.type === 'timeZoneName')?.value ?? '';
-          nodes.forEach((n) => (n.textContent = `${time} ${tz}`));
+          nodes.forEach((n) => rollTo(n, `${time} ${tz}`));
         };
         tick();
         window.setInterval(tick, 1000 * 20);
