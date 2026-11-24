@@ -1,0 +1,29 @@
+---
+const { items = [] } = Astro.props;
+---
+
+<div class="work-list">
+  {
+    items.map((work, i) => (
+      <a
+        class="work-row"
+        href={`/work/${work.id}/`}
+        data-preview={work.data.cover}
+        data-cursor="View"
+        data-reveal
+        style={`--d:${i}`}
+      >
+        <h3 class="work-row__title">{work.data.title}</h3>
+        <span class="work-row__cat">{work.data.category}</span>
+        <span class="work-row__year">{work.data.year}</span>
+        <span class="work-row__thumb">
+          <img src={work.data.cover} alt={work.data.title} loading="lazy" decoding="async" />
+        </span>
+      </a>
+    ))
+  }
+</div>
+
+<div class="preview" data-preview aria-hidden="true">
+  <img alt="" />
+</div>

@@ -1,0 +1,18 @@
+---
+import Base from '../layouts/Base.astro';
+---
+
+<Base title="404 — Your Name" description="Page not found.">
+  <section class="page-head wrap" style="min-height:70svh; display:flex; flex-direction:column; justify-content:center">
+    <p class="t-eyebrow" data-reveal>Error 404</p>
+    <h1 class="t-display" style="margin-top:16px">
+      <span class="line-mask"><span style="--i:0">Nothing here—</span></span>
+    </h1>
+    <p class="lede" data-reveal style="--d:1; margin-top:28px">
+      The page you're looking for doesn't exist, or it moved somewhere quieter.
+    </p>
+    <p style="margin-top:32px" data-reveal>
+      <a class="btn" href="/" data-cursor="hover">Back home</a>
+    </p>
+  </section>
+</Base>

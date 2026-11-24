@@ -1,0 +1,279 @@
+---
+import { ClientRouter } from 'astro:transitions';
+import '../styles/global.css';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+import Cursor from '../components/Cursor.astro';
+
+interface Props {
+  title?: string;
+  description?: string;
+}
+
+const {
+  title = 'Your Name — Designer & AI Visual Maker',
+  description = 'Student designer working on posters, short films and AI visual pipelines.',
+} = Astro.props;
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <meta name="theme-color" content="#f2f0eb" />
+
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:image" content="/images/og.png" />
+    <meta name="twitter:card" content="summary_large_image" />
+
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+
+    <!-- 字体：正式上线时改成自托管 woff2，见 README -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Inter+Tight:wght@400;500;600&display=swap"
+      rel="stylesheet"
+    />
+
+    <ClientRouter />
+  </head>
+  <body>
+    <div class="preloader" data-preloader>
+      <span class="preloader__word" data-preloader-word>Hello</span>
+    </div>
+
+    <Cursor />
+    <Header />
+
+    <main>
+      <slot />
+    </main>
+
+    <Footer />
+
+    <script>
+      import Lenis from 'lenis';
+
+      const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      const isTouch = window.matchMedia('(hover: none)').matches;
+
+      /* ------------------------------------------------------------
+         共享状态：指针位置与「本页」的 DOM 引用。
+         全局监听只绑一次，页面切换只换引用，不会叠加。
+         ------------------------------------------------------------ */
+      const pointer = { x: window.innerWidth / 2, y: window.innerHeight / 2, moved: false };
+      let cursorEl: HTMLElement | null = null;
+      let previewEl: HTMLElement | null = null;
+      let previewImg: HTMLImageElement | null = null;
+
+      let cx = pointer.x;
+      let cy = pointer.y;
+      let px = pointer.x;
+      let py = pointer.y;
+
+      window.addEventListener(
+        'pointermove',
+        (e) => {
+          pointer.x = e.clientX;
+          pointer.y = e.clientY;
+          pointer.moved = true;
+        },
+        { passive: true }
+      );
+
+      // 全站唯一的渲染循环
+      function frame() {
+        if (cursorEl) {
+          cx += (pointer.x - cx) * 0.15;
+          cy += (pointer.y - cy) * 0.15;
+          cursorEl.style.transform = `translate3d(${cx}px, ${cy}px, 0)`;
+        }
+        if (previewEl && previewEl.classList.contains('is-on')) {
+          px += (pointer.x - px) * 0.12;
+          py += (pointer.y - py) * 0.12;
+          previewEl.style.transform = `translate3d(${px + 28}px, ${py - previewEl.offsetHeight / 2}px, 0)`;
+        }
+        requestAnimationFrame(frame);
+      }
+      requestAnimationFrame(frame);
+
+      /* ------------------------------------------------------------
+         Lenis
+         ------------------------------------------------------------ */
+      let lenis: Lenis | null = null;
+      let lenisRaf = 0;
+
+      function initLenis() {
+        lenis?.destroy();
+        cancelAnimationFrame(lenisRaf);
+        lenis = null;
+        if (reduceMotion) return;
+        lenis = new Lenis({ lerp: 0.1, wheelMultiplier: 0.9, smoothWheel: true });
+        const loop = (time: number) => {
+          lenis?.raf(time);
+          lenisRaf = requestAnimationFrame(loop);
+        };
+        lenisRaf = requestAnimationFrame(loop);
+      }
+
+      /* ------------------------------------------------------------
+         入场：滚动揭示 + 首屏遮罩
+         ------------------------------------------------------------ */
+      function initReveal() {
+        const els = document.querySelectorAll<HTMLElement>('[data-reveal]:not(.is-in)');
+        if (!els.length) return;
+        if (!('IntersectionObserver' in window) || reduceMotion) {
+          els.forEach((el) => el.classList.add('is-in'));
+          return;
+        }
+        const io = new IntersectionObserver(
+          (entries) => {
+            entries.forEach((entry) => {
+              if (!entry.isIntersecting) return;
+              entry.target.classList.add('is-in');
+              io.unobserve(entry.target);
+            });
+          },
+          { rootMargin: '0px 0px -6% 0px', threshold: 0.08 }
+        );
+        els.forEach((el) => io.observe(el));
+      }
+
+      function initHero() {
+        requestAnimationFrame(() =>
+          requestAnimationFrame(() => document.documentElement.classList.add('is-ready'))
+        );
+      }
+
+      /* ------------------------------------------------------------
+         页脚本地时间
+         ------------------------------------------------------------ */
+      function initClock() {
+        const nodes = document.querySelectorAll<HTMLElement>('[data-clock]');
+        if (!nodes.length) return;
+        const tick = () => {
+          const now = new Date();
+          const time = new Intl.DateTimeFormat('en-GB', {
+            hour: '2-digit',
+            minute: '2-digit',
+            hour12: false,
+          }).format(now);
+          const tz =
+            Intl.DateTimeFormat('en-US', { timeZoneName: 'short' })
+              .formatToParts(now)
+              .find((p) => p.type === 'timeZoneName')?.value ?? '';
+          nodes.forEach((n) => (n.textContent = `${time} ${tz}`));
+        };
+        tick();
+        window.setInterval(tick, 1000 * 20);
+      }
+
+      /* ------------------------------------------------------------
+         自定义光标（元素级绑定，每页重绑；循环在 frame 里）
+         ------------------------------------------------------------ */
+      function initCursor() {
+        cursorEl = document.querySelector<HTMLElement>('.cursor');
+        if (!cursorEl || isTouch || reduceMotion) {
+          if (cursorEl) cursorEl.style.display = 'none';
+          return;
+        }
+        if (!pointer.moved) {
+          cx = pointer.x;
+          cy = pointer.y;
+        }
+        document.querySelectorAll<HTMLElement>('[data-cursor]').forEach((el) => {
+          el.addEventListener('pointerenter', () => {
+            if (!cursorEl) return;
+            const label = el.dataset.cursor;
+            if (label && label !== 'hover') {
+              cursorEl.classList.add('is-label');
+              cursorEl.textContent = label;
+            } else {
+              cursorEl.classList.add('is-hover');
+            }
+          });
+          el.addEventListener('pointerleave', () => {
+            if (!cursorEl) return;
+            cursorEl.classList.remove('is-hover', 'is-label');
+            cursorEl.textContent = '';
+          });
+        });
+      }
+
+      /* ------------------------------------------------------------
+         作品行 → 光标跟随预览
+         ------------------------------------------------------------ */
+      function initPreview() {
+        previewEl = document.querySelector<HTMLElement>('.preview');
+        if (!previewEl || isTouch || reduceMotion) {
+          previewEl = null;
+          return;
+        }
+        previewImg = previewEl.querySelector('img');
+        if (!pointer.moved) {
+          px = pointer.x;
+          py = pointer.y;
+        }
+
+        document.querySelectorAll<HTMLAnchorElement>('.work-row').forEach((row) => {
+          const src = row.dataset.preview;
+          if (!src || !previewImg) return;
+          row.addEventListener('pointerenter', () => {
+            if (!previewEl || !previewImg) return;
+            previewImg.src = src;
+            previewEl.classList.add('is-on');
+          });
+          row.addEventListener('pointerleave', () => previewEl?.classList.remove('is-on'));
+        });
+      }
+
+      /* ------------------------------------------------------------
+         预加载：只在首次进入播放
+         ------------------------------------------------------------ */
+      function initPreloader() {
+        const el = document.querySelector<HTMLElement>('[data-preloader]');
+        if (!el) return;
+        if (reduceMotion || sessionStorage.getItem('preloaded') === '1') {
+          el.remove();
+          return;
+        }
+        const word = el.querySelector<HTMLElement>('[data-preloader-word]');
+        const words = ['Hello', 'Bonjour', 'नमस्ते', 'Ciao', 'Olá', 'おい', 'Hallå', 'Guten tag', 'Hallo'];
+        let i = 0;
+        const timer = window.setInterval(() => {
+          i = (i + 1) % words.length;
+          if (word) word.textContent = words[i];
+        }, 95);
+        window.setTimeout(() => {
+          window.clearInterval(timer);
+          el.classList.add('is-done');
+          sessionStorage.setItem('preloaded', '1');
+          window.setTimeout(() => el.remove(), 600);
+        }, 900);
+      }
+
+      function boot() {
+        initPreloader();
+        initLenis();
+        initHero();
+        initReveal();
+        initClock();
+        initPreview();
+        initCursor();
+      }
+
+      document.addEventListener('astro:page-load', boot);
+
+      // 页面切换前先把遮罩动画复位，让新页面重新播放
+      document.addEventListener('astro:before-swap', () => {
+        document.documentElement.classList.remove('is-ready');
+      });
+    </script>
+  </body>
+</html>

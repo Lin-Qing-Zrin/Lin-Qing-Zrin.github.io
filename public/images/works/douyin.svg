@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 1280" width="720" height="1280">
+  <defs>
+    <linearGradient id="d1" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#ff3d7f"/>
+      <stop offset="0.55" stop-color="#ff8a3d"/>
+      <stop offset="1" stop-color="#ffd23d"/>
+    </linearGradient>
+  </defs>
+  <rect width="720" height="1280" fill="#101014"/>
+  <g opacity="0.9">
+    <rect x="40" y="300" width="640" height="640" rx="160" fill="url(#d1)"/>
+    <circle cx="360" cy="620" r="150" fill="#101014" opacity="0.92"/>
+    <path d="M320 545 L445 620 L320 695 Z" fill="#f2f0eb"/>
+  </g>
+  <text x="40" y="180" font-family="Helvetica, Arial, sans-serif" font-size="96" font-weight="700" fill="#f2f0eb" letter-spacing="-4">慢帧</text>
+  <text x="40" y="250" font-family="Helvetica, Arial, sans-serif" font-size="40" font-weight="500" fill="#8a8a86" letter-spacing="8">SLOMO / 9:16</text>
+  <text x="40" y="1120" font-family="Helvetica, Arial, sans-serif" font-size="34" font-weight="600" fill="#f2f0eb">@你的抖音号</text>
+  <text x="40" y="1200" font-family="Helvetica, Arial, sans-serif" font-size="26" fill="#8a8a86">ACCOUNT VISUAL — 2024</text>
+</svg>

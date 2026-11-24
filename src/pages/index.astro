@@ -1,0 +1,53 @@
+---
+import Base from '../layouts/Base.astro';
+import WorkRows from '../components/WorkRows.astro';
+import { getCollection } from 'astro:content';
+
+const works = (await getCollection('works')).sort((a, b) => a.data.order - b.data.order);
+const featured = works.filter((w) => w.data.featured).slice(0, 4);
+---
+
+<Base>
+  <section class="hero wrap">
+    <p class="t-eyebrow hero__eyebrow" data-reveal>Student · Designer & AI Visual Maker</p>
+
+    <h1 class="t-display">
+      <span class="line-mask"><span style="--i:0">Your Name—</span></span>
+    </h1>
+
+    <div class="hero__lede">
+      <p class="lede" data-reveal style="--d:1">
+        I make posters, short films and AI-driven visuals. Currently a student,
+        learning in public, building a pipeline from idea to final frame.
+      </p>
+      <div data-reveal style="--d:2">
+        <p class="lede" style="margin-bottom:28px">
+          Working across design and code gives me an unusual place in the process —
+          I care about the <em>rhythm</em> of a frame as much as the system behind it.
+        </p>
+        <a class="btn" href="/about/" data-cursor="hover">About me</a>
+      </div>
+    </div>
+  </section>
+
+  <section class="section wrap">
+    <div class="section-head">
+      <p class="t-eyebrow" data-reveal>Recent work</p>
+      <a class="link-u t-meta" href="/work/" data-cursor="hover">All work ({works.length})</a>
+    </div>
+    <WorkRows items={featured} />
+  </section>
+
+  <section class="section wrap">
+    <hr class="rule" />
+    <div class="split">
+      <p class="t-eyebrow" data-reveal>Currently</p>
+      <div data-reveal style="--d:1">
+        <p class="t-h2" style="margin-bottom:20px">
+          Open to internships, collaborations<br />and commissioned posters.
+        </p>
+        <a class="btn btn--solid" href="/contact/" data-cursor="let’s talk">Get in touch</a>
+      </div>
+    </div>
+  </section>
+</Base>

@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 1000" width="800" height="1000">
+  <defs>
+    <linearGradient id="g1" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#ff2d55"/>
+      <stop offset="1" stop-color="#ff9a00"/>
+    </linearGradient>
+    <linearGradient id="g2" x1="1" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#00e0ff"/>
+      <stop offset="1" stop-color="#1a3cff"/>
+    </linearGradient>
+  </defs>
+  <rect width="800" height="1000" fill="#0a0a0a"/>
+  <circle cx="560" cy="330" r="230" fill="url(#g1)"/>
+  <rect x="60" y="600" width="680" height="120" fill="url(#g2)"/>
+  <rect x="60" y="760" width="420" height="120" fill="#f2f0eb"/>
+  <text x="60" y="150" font-family="Helvetica, Arial, sans-serif" font-size="120" font-weight="700" fill="#f2f0eb" letter-spacing="-6">城市噪音</text>
+  <text x="60" y="230" font-family="Helvetica, Arial, sans-serif" font-size="52" font-weight="500" fill="#8a8a86" letter-spacing="6">CITY NOISE / 01</text>
+  <text x="60" y="960" font-family="Helvetica, Arial, sans-serif" font-size="28" fill="#8a8a86">POSTER SERIES — 2024</text>
+</svg>

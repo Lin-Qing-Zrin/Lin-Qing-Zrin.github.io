@@ -1,0 +1,72 @@
+---
+import { getCollection, render } from 'astro:content';
+import Base from '../../layouts/Base.astro';
+
+export async function getStaticPaths() {
+  const works = await getCollection('works');
+  return works.map((entry) => ({
+    params: { slug: entry.id },
+    props: { entry },
+  }));
+}
+
+const { entry } = Astro.props;
+const { Content } = await render(entry);
+const d = entry.data;
+---
+
+<Base title={`${d.title} — Your Name`} description={d.summary}>
+  <article>
+    <header class="case-hero wrap">
+      <p class="t-eyebrow" data-reveal>{d.category} — {d.year}</p>
+      <h1 class="t-h1" style="margin-top:20px">
+        <span class="line-mask"><span style="--i:0">{d.title}</span></span>
+      </h1>
+      <p class="lede" data-reveal style="--d:1; margin-top:clamp(24px,4vw,44px)">
+        {d.summary}
+      </p>
+    </header>
+
+    <div class="wrap">
+      <figure class="case-cover" data-reveal style="--d:2">
+        <img
+          src={d.cover}
+          alt={d.title}
+          width="1600"
+          height="1000"
+          loading="eager"
+          decoding="async"
+          style={`aspect-ratio:${d.ratio.replace(':', '/')}; object-fit:contain`}
+        />
+      </figure>
+    </div>
+
+    <div class="wrap case-body">
+      <dl class="case-facts">
+        <div>
+          <dt>Role</dt>
+          <dd>{d.role}</dd>
+        </div>
+        <div>
+          <dt>Tools</dt>
+          <dd>{d.tools.join(', ')}</dd>
+        </div>
+        <div>
+          <dt>Year</dt>
+          <dd>{d.year}</dd>
+        </div>
+      </dl>
+
+      <div class="prose">
+        <Content />
+      </div>
+    </div>
+
+    <div class="wrap" style="padding-bottom: clamp(64px, 10vw, 160px)">
+      <hr class="rule" />
+      <a class="t-h2" href="/work/" style="display:inline-block; margin-top:32px" data-cursor="hover">
+        ← All work
+      </a>
+    </div>
+  </article>
+</Base>
