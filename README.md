@@ -101,13 +101,25 @@ git push -u origin main
 
 ## 5. 换成你自己的信息（checklist）
 
-- [ ] `src/components/Header.astro` — 左上角名字
-- [ ] `src/pages/index.astro` — H1 名字、两段自我介绍、eyebrow
-- [ ] `src/pages/about.astro` — 【学校】【专业】【城市】
-- [ ] `src/pages/contact.astro` + `src/components/Footer.astro` — 邮箱、电话、社交链接
-- [ ] `astro.config.mjs` — `site` 改成你的线上地址
-- [ ] `public/images/og.png` — 分享卡片图
-- [ ] `src/styles/global.css` 的 `:root` — 想换强调色改 `--blue`
+- [x] `src/components/Header.astro` — 左上角名字（刘启征）
+- [x] `src/pages/index.astro` — H1 名字、两段自我介绍、eyebrow
+- [x] `src/pages/about.astro` — 学校 / 专业 / 城市（苏州健雄职业技术学院 · Digital Media Technology · 苏州）
+- [x] `src/pages/contact.astro` + `src/components/Footer.astro` — 邮箱 Linqingzhu0420@gmail.com、抖音 39490590044、GitHub Lin-Qing-Zrin
+- [x] `astro.config.mjs` — `site: https://lin-qing-zrin.github.io`（仓库名必须是 `Lin-Qing-Zrin.github.io`）
+- [x] `public/images/og.png` — 分享卡片图（已用中文名重做）
+- [ ] `src/styles/global.css` 的 `:root` — 想换强调色改 `--blue`（现在只在 hover 用蓝色）
+- [ ] **4 个作品仍是占位图**（`poster-01.svg` / `douyin.svg` / `ai-visual.svg` / `short-film.svg`），换成真图后才算完成
+
+### 时钟
+
+页脚 "Local time" 固定按 **Asia/Shanghai** 显示（`src/layouts/Base.astro` 的 `initClock`），
+访客在哪个国家看到的都是北京时间，不会变成他自己的。
+
+### 预览框比例
+
+作品行 hover 时跟随鼠标的预览框会按 frontmatter 里的 `ratio` 自动换尺寸：
+`4:5` → 300×375 / `16:10` → 356×222 / `9:16` → 238×423。
+新增比例时在 `global.css` 里补一条 `.preview[data-ratio='…']` 即可，JS 不用改。
 
 ## 6. 设计约定（别破坏它）
 

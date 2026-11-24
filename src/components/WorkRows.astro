@@ -9,7 +9,7 @@ const { items = [] } = Astro.props;
         class="work-row"
         href={`/work/${work.id}/`}
         data-preview={work.data.cover}
-        data-cursor="View"
+        data-ratio={work.data.ratio}
         data-reveal
         style={`--d:${i}`}
       >
@@ -25,5 +25,6 @@ const { items = [] } = Astro.props;
 </div>
 
 <div class="preview" data-preview aria-hidden="true">
-  <img alt="" />
+  <img class="preview__img is-front" alt="" decoding="async" />
+  <img class="preview__img" alt="" decoding="async" />
 </div>

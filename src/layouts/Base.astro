@@ -11,8 +11,8 @@ interface Props {
 }
 
 const {
-  title = 'Your Name — Designer & AI Visual Maker',
-  description = 'Student designer working on posters, short films and AI visual pipelines.',
+  title = '刘启征 — Digital Media & AI Visual',
+  description = 'Digital Media Technology student in Suzhou — posters, short films and AI visual pipelines.',
 } = Astro.props;
 ---
 
@@ -70,7 +70,6 @@ const {
       const pointer = { x: window.innerWidth / 2, y: window.innerHeight / 2, moved: false };
       let cursorEl: HTMLElement | null = null;
       let previewEl: HTMLElement | null = null;
-      let previewImg: HTMLImageElement | null = null;
 
       let cx = pointer.x;
       let cy = pointer.y;
@@ -82,7 +81,13 @@ const {
         (e) => {
           pointer.x = e.clientX;
           pointer.y = e.clientY;
-          pointer.moved = true;
+          if (!pointer.moved) {
+            pointer.moved = true;
+            // 鼠标真正移动过之前不显示自定义光标，避免加载瞬间出现一个孤立的点
+            cx = e.clientX;
+            cy = e.clientY;
+            document.querySelector<HTMLElement>('.cursor')?.classList.add('is-live');
+          }
         },
         { passive: true }
       );
@@ -94,7 +99,7 @@ const {
           cy += (pointer.y - cy) * 0.15;
           cursorEl.style.transform = `translate3d(${cx}px, ${cy}px, 0)`;
         }
-        if (previewEl && previewEl.classList.contains('is-on')) {
+        if (previewEl) {
           px += (pointer.x - px) * 0.12;
           py += (pointer.y - py) * 0.12;
           previewEl.style.transform = `translate3d(${px + 28}px, ${py - previewEl.offsetHeight / 2}px, 0)`;
@@ -163,9 +168,10 @@ const {
             hour: '2-digit',
             minute: '2-digit',
             hour12: false,
+            timeZone: 'Asia/Shanghai',
           }).format(now);
           const tz =
-            Intl.DateTimeFormat('en-US', { timeZoneName: 'short' })
+            new Intl.DateTimeFormat('en-US', { timeZone: 'Asia/Shanghai', timeZoneName: 'short' })
               .formatToParts(now)
               .find((p) => p.type === 'timeZoneName')?.value ?? '';
           nodes.forEach((n) => (n.textContent = `${time} ${tz}`));
@@ -186,6 +192,9 @@ const {
         if (!pointer.moved) {
           cx = pointer.x;
           cy = pointer.y;
+        } else {
+          // 页面切换后新光标元素默认隐形，鼠标已经动过就直接点亮
+          cursorEl.classList.add('is-live');
         }
         document.querySelectorAll<HTMLElement>('[data-cursor]').forEach((el) => {
           el.addEventListener('pointerenter', () => {
@@ -215,21 +224,52 @@ const {
           previewEl = null;
           return;
         }
-        previewImg = previewEl.querySelector('img');
+        const layers = Array.from(previewEl.querySelectorAll<HTMLImageElement>('.preview__img'));
+        if (layers.length < 2) {
+          previewEl = null;
+          return;
+        }
         if (!pointer.moved) {
           px = pointer.x;
           py = pointer.y;
         }
 
+        let front = 0;
+        let token = 0;
+
+        // 两张图层交叉淡入：新图 decode 完成后才切换，避免闪一下空白
+        const show = async (src: string) => {
+          const back = layers[1 - front];
+          if (back.classList.contains('is-front') && back.dataset.src === src) return;
+          const mine = ++token;
+          back.dataset.src = src;
+          back.src = src;
+          try {
+            await back.decode();
+          } catch {
+            /* decode 失败也照常显示 */
+          }
+          if (mine !== token) return;
+          back.classList.add('is-front');
+          layers[front].classList.remove('is-front');
+          front = 1 - front;
+        };
+
         document.querySelectorAll<HTMLAnchorElement>('.work-row').forEach((row) => {
           const src = row.dataset.preview;
-          if (!src || !previewImg) return;
+          if (!src) return;
+          const ratio = row.dataset.ratio || '4:5';
           row.addEventListener('pointerenter', () => {
-            if (!previewEl || !previewImg) return;
-            previewImg.src = src;
-            previewEl.classList.add('is-on');
+            previewEl?.classList.add('is-on');
+            if (previewEl) previewEl.dataset.ratio = ratio;
+            void show(src);
           });
-          row.addEventListener('pointerleave', () => previewEl?.classList.remove('is-on'));
+          row.addEventListener('pointerleave', (e) => {
+            // 在作品行之间移动时保持显示，只有真正离开列表才淡出
+            const to = e.relatedTarget;
+            if (to instanceof Element && to.closest('.work-row')) return;
+            previewEl?.classList.remove('is-on');
+          });
         });
       }
 
