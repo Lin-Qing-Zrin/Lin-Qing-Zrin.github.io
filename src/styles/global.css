@@ -632,6 +632,8 @@ html.is-ready .line-mask > span {
   width: 34px;
   height: 34px;
   margin: -17px 0 0 -17px;
+  background: var(--accent);
+  mix-blend-mode: normal;
 }
 .cursor.is-label {
   width: 88px;
@@ -1331,19 +1333,35 @@ html.no-preloader .preloader {
    艺术字：中文名做空心描边（宋体黑），英文栏目做几何粗黑
    ============================================================ */
 .hero__name {
+  position: relative;
   font-family: var(--font-serif);
   font-weight: 900;
   letter-spacing: 0.01em;
   line-height: 0.9;
   color: transparent;
   -webkit-text-stroke: clamp(2.2px, 0.23vw, 3.4px) var(--ink);
-  background-image: repeating-linear-gradient(
-    92deg,
-    rgba(215, 255, 63, 0.2) 0 2px,
-    transparent 2px 9px
+}
+/* 叠一层实心副本，用半径为 --fr 的圆做遮罩：指针附近才"填"进来 */
+.hero__fill {
+  position: absolute;
+  inset: 0;
+  display: block;
+  font: inherit;
+  letter-spacing: inherit;
+  line-height: inherit;
+  color: #f5eddd;
+  -webkit-text-stroke: 0;
+  pointer-events: none;
+  -webkit-mask-image: radial-gradient(
+    circle var(--fr, 0px) at var(--fx, 50%) var(--fy, 50%),
+    #000 0 42%,
+    transparent 62%
   );
-  -webkit-background-clip: text;
-  background-clip: text;
+  mask-image: radial-gradient(
+    circle var(--fr, 0px) at var(--fx, 50%) var(--fy, 50%),
+    #000 0 42%,
+    transparent 62%
+  );
 }
 
 /* 描边字不叠彩色重影，只保留抬起与轻微虚化 */
@@ -2260,14 +2278,14 @@ html.is-locked {
 .prac-peek {
   position: fixed;
   top: 0;
-  left: 38%;
+  left: 0;
   width: clamp(240px, 26vw, 380px);
   height: clamp(200px, 21vw, 290px);
   overflow: hidden;
   z-index: 2;
   pointer-events: none;
   opacity: 0;
-  transform: translate3d(0, var(--py, 0px), 0);
+  transform: translate3d(var(--px, 0px), var(--py, 0px), 0);
   transition: opacity 0.26s var(--ease);
   background: #0c0c0b;
   outline: 1px solid rgba(236, 233, 227, 0.14);

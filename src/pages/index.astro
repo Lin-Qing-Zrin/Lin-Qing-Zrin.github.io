@@ -15,12 +15,13 @@ import { practice } from '../data/practice';
           <p class="mono" data-boot>Film · Game · VFX · Self-media</p>
         </div>
 
-        <h1 class="t-display hero__name">
+        <h1 class="t-display hero__name" data-cursor="hover">
           <span class="line-mask"
             ><span style="--i:0" data-namefx
               ><span class="fx-ch">刘</span><span class="fx-ch">启</span><span class="fx-ch">征</span></span
             ></span
           >
+          <span class="hero__fill" aria-hidden="true">刘启征</span>
         </h1>
 
         <p class="hero__lede-s" data-reveal style="--d:1">
@@ -72,56 +73,56 @@ import { practice } from '../data/practice';
     document.addEventListener('astro:page-load', bindGlobeReadout);
     bindGlobeReadout();
 
-    // 名字：指针离开的地方失焦，靠近的地方对焦（像镜头拉焦）
+    // 名字：描边之外，指针附近"渗"进一团暖墨——越靠近，填进来的面积越大
     function bindNameFocus() {
       const name = document.querySelector<HTMLElement>('[data-namefx]');
-      if (!name) return;
+      const box = document.querySelector<HTMLElement>('.hero__name');
+      if (!name || !box) return;
       const w = window as Window & { __nameFx?: boolean };
       if (w.__nameFx) return;
       w.__nameFx = true;
+      if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
 
-      const chars = [...name.querySelectorAll<HTMLElement>('.fx-ch')];
-      if (!chars.length) return;
-      const hero = name.closest('.hero--instrument') ?? document.body;
-      const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-      if (reduce) return;
-
-      let px = -9999;
-      let py = -9999;
+      let mx = 0;
+      let my = 0;
       let inside = false;
-      const cur = chars.map(() => 0);
+      let radius = 0;
+      let target = 0;
 
-      hero.addEventListener('pointermove', (e) => {
-        px = (e as PointerEvent).clientX;
-        py = (e as PointerEvent).clientY;
+      box.addEventListener('pointerenter', () => {
         inside = true;
       });
-      hero.addEventListener('pointerleave', () => {
+      box.addEventListener('pointerleave', () => {
         inside = false;
       });
 
       const loop = () => {
-        chars.forEach((el, i) => {
-          const r = el.getBoundingClientRect();
-          const cx = r.left + r.width / 2;
-          const cy = r.top + r.height / 2;
-          const d = Math.hypot(px - cx, py - cy);
-          const target = inside ? Math.max(0, 1 - d / 300) : 0;
-          cur[i] += (target - cur[i]) * 0.14;
-          const a = cur[i];
-          el.style.transform =
-            a > 0.01 ? `translateY(${(-a * 7).toFixed(1)}px) scale(${(1 + a * 0.016).toFixed(3)})` : '';
-          el.style.filter = a < 0.995 ? `blur(${((1 - a) * 0.9).toFixed(2)}px)` : '';
-          el.style.textShadow =
-            a > 0.04
-              ? `${(a * 5).toFixed(1)}px 0 rgba(255, 59, 31, 0.38), ${(-a * 5).toFixed(1)}px 0 rgba(90, 255, 220, 0.24)`
-              : 'none';
-        });
+        if (inside) {
+          const r = box.getBoundingClientRect();
+          mx = Math.round(pxLast - r.left);
+          my = Math.round(pyLast - r.top);
+          box.style.setProperty('--fx', `${mx}px`);
+          box.style.setProperty('--fy', `${my}px`);
+        }
+        target = inside ? 128 : 0;
+        radius += (target - radius) * 0.12;
+        if (radius < 0.4 && target === 0) radius = 0;
+        box.style.setProperty('--fr', `${radius.toFixed(1)}px`);
         requestAnimationFrame(loop);
       };
+
+      let pxLast = 0;
+      let pyLast = 0;
+      document.addEventListener(
+        'pointermove',
+        (e) => {
+          pxLast = e.clientX;
+          pyLast = e.clientY;
+        },
+        { passive: true },
+      );
       loop();
     }
-
     document.addEventListener('astro:page-load', bindNameFocus);
     bindNameFocus();
 
@@ -255,16 +256,21 @@ import { practice } from '../data/practice';
       };
 
       let raf = 0;
+      let curX = 0;
       let curY = 0;
+      let targetX = 0;
       let targetY = 0;
       let curLocal = 0;
       let localY = 0;
       let inited = false;
 
-      // 画框固定在视口里，中心跟住指针（留 12px 安全边）
-      const draw = (clientY: number, local: number) => {
+      // 画框中心死死跟住指针（两个轴都跟），只保留 10px 不出屏
+      const draw = (clientX: number, clientY: number, local: number) => {
+        const boxW = peek.offsetWidth;
         const boxH = peek.offsetHeight;
-        const py = Math.max(12, Math.min(window.innerHeight - boxH - 12, clientY - boxH / 2));
+        const px = Math.max(10, Math.min(window.innerWidth - boxW - 10, clientX - boxW / 2));
+        const py = Math.max(10, Math.min(window.innerHeight - boxH - 10, clientY - boxH / 2));
+        peek.style.setProperty('--px', `${px.toFixed(2)}px`);
         peek.style.setProperty('--py', `${py.toFixed(2)}px`);
         const t = toFloat(local);
         strip.style.transform = `translate3d(0, ${(-t * boxH).toFixed(2)}px, 0)`;
@@ -272,27 +278,32 @@ import { practice } from '../data/practice';
 
       // 指数阻尼：不管刷新率多少，手感一致
       const loop = () => {
-        const d = targetY - curY;
+        const dx = targetX - curX;
+        const dy = targetY - curY;
         const dl = localY - curLocal;
-        curY += d * 0.14;
+        curX += dx * 0.14;
+        curY += dy * 0.14;
         curLocal += dl * 0.16;
-        if (Math.abs(d) < 0.25 && Math.abs(dl) < 0.2) {
+        if (Math.abs(dx) < 0.25 && Math.abs(dy) < 0.25 && Math.abs(dl) < 0.2) {
+          curX = targetX;
           curY = targetY;
           curLocal = localY;
-          draw(curY, curLocal);
+          draw(curX, curY, curLocal);
           raf = 0;
           return;
         }
-        draw(curY, curLocal);
+        draw(curX, curY, curLocal);
         raf = requestAnimationFrame(loop);
       };
 
       list.addEventListener('pointermove', (e) => {
         const rect = list.getBoundingClientRect();
-        // 画框跟着指针走（视口坐标），图带按指针在列表里的相对位置连续滚动
+        // 画框中心 = 指针位置；图带按指针在列表里的相对位置连续滚动
+        targetX = e.clientX;
         targetY = e.clientY;
         localY = e.clientY - rect.top;
         if (!inited) {
+          curX = targetX;
           curY = targetY;
           curLocal = localY;
           inited = true;
