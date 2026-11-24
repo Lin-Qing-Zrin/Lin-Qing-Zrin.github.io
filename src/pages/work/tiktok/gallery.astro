@@ -11,11 +11,28 @@ type Item = {
   h: number;
 };
 
-const items = raw as Item[];
+const src = raw as Item[];
+
+// 把系列打散：按系列轮流取一张，避免同一系列扎堆
+const bySerie = new Map<string, Item[]>();
+for (const it of src) {
+  if (!bySerie.has(it.serieSlug)) bySerie.set(it.serieSlug, []);
+  bySerie.get(it.serieSlug)!.push(it);
+}
+const buckets = [...bySerie.values()];
+const items: Item[] = [];
+let guard = 0;
+while (items.length < src.length && guard++ < 500) {
+  for (const b of buckets) {
+    const next = b.shift();
+    if (next) items.push(next);
+  }
+}
+
 const no = (n: number) => String(n).padStart(2, '0');
 const ratio = (it: Item) => (it.w / it.h).toFixed(4);
 
-// 固定的「散」：每个格子按索引给一点点错位和大小差，看起来不是网格
+// 固定的「散」：每个格子一点错位和大小差，看起来不是网格
 const rand = (i: number) => {
   const x = Math.sin(i * 12.9898) * 43758.5453;
   return x - Math.floor(x);
@@ -35,9 +52,9 @@ const jitter = (i: number) => {
 >
   <div class="cvs" data-cvs>
     <div class="cvs__head mono">
-      <a class="cvs__back" href="/work/tiktok/" data-cursor="hover">← TikTok</a>
+      <a class="cvs__back" href="/work/tiktok/">← TikTok</a>
       <span class="cvs__meta">Gallery · {items.length} pieces</span>
-      <span class="cvs__hint">滚动上下 · 移动左右 · 按住拖拽 · 点开看大图</span>
+      <span class="cvs__hint">滚动上下 · 移动跟随 · 按住拖拽 · 点开看大图</span>
     </div>
 
     <div class="cvs__track" data-track>
@@ -55,13 +72,7 @@ const jitter = (i: number) => {
               <span>{no(i + 1)}</span>
             </span>
             <span class="cvs__ph">
-              <img
-                src={it.src}
-                alt={it.title}
-                loading="lazy"
-                decoding="async"
-                draggable="false"
-              />
+              <img src={it.src} alt={it.title} loading="lazy" decoding="async" draggable="false" />
             </span>
           </button>
         ))
@@ -81,7 +92,7 @@ const jitter = (i: number) => {
       <button class="cvs-viewer__close" type="button" data-cv-close>Close ✕</button>
     </div>
     <div class="cvs-viewer__stage">
-      <img data-cv-img alt="" decoding="async" />
+      <img data-cv-img alt="" decoding="async" draggable="false" />
     </div>
     <div class="cvs-viewer__foot mono">
       <button class="cvs-viewer__nav" type="button" data-cv-prev>← Prev</button>
@@ -94,7 +105,7 @@ const jitter = (i: number) => {
     function initCanvas() {
       const root = document.querySelector('[data-cvs]');
       const track = document.querySelector('[data-track]');
-      const pos = document.querySelector('[data-cvs-pos]');
+      const posEl = document.querySelector('[data-cvs-pos]');
       const vw = document.querySelector('[data-cv]');
       if (!root || !track || !vw) return;
       if (root.dataset.ready === '1') return;
@@ -102,101 +113,106 @@ const jitter = (i: number) => {
 
       const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
+      // off = 已提交位移（滚轮/拖拽后保留）；drift = 指针跟随（松手回零）
+      let offX = 0;
+      let offY = 0;
+      let driftX = 0;
+      let driftY = 0;
+      let scale = 1;
+      let scaleT = 1;
       let x = 0;
       let y = 0;
-      let z = 1;
-      let xt = 0;
-      let yt = 0;
-      let zt = 1;
 
-      let holding = false;
+      let down = false;
       let moved = 0;
-      let dragFromX = 0;
-      let dragFromY = 0;
-      let xAtDrag = 0;
-      let yAtDrag = 0;
+      let fromX = 0;
+      let fromY = 0;
+      let offAtX = 0;
+      let offAtY = 0;
 
-      const maxScrollY = () => Math.max(0, track.scrollHeight * z - root.clientHeight);
-      const maxShiftX = () => Math.max(0, (track.scrollWidth * z - root.clientWidth) / 2);
-      const clampY = (v) => Math.max(-maxScrollY(), Math.min(0, v));
-      const clampX = (v) => Math.max(-maxShiftX(), Math.min(maxShiftX(), v));
+      const maxY = () => Math.max(0, track.scrollHeight * scale - root.clientHeight);
+      const maxX = () => Math.max(0, (track.scrollWidth * scale - root.clientWidth) / 2);
+      const clampY = (v) => Math.max(-maxY(), Math.min(0, v));
+      const clampX = (v) => Math.max(-maxX(), Math.min(maxX(), v));
 
-      const frame = () => {
-        const k = reduce ? 1 : 0.085;
-        x += (xt - x) * k;
-        y += (yt - y) * k;
-        z += (zt - z) * (reduce ? 1 : 0.12);
-        track.style.transform = `translate3d(${x.toFixed(2)}px, ${y.toFixed(2)}px, 0) scale(${z.toFixed(4)})`;
-        if (pos) {
-          const total = Math.max(1, maxScrollY());
-          const pct = Math.round(Math.min(1, Math.max(0, -y / total)) * 100);
-          pos.textContent = `${pct}%`;
+      let prev = performance.now();
+      const render = (now) => {
+        const dt = Math.min(64, now - prev) / 16.67; // 以 60fps 为 1 帧基准
+        prev = now;
+        offX = clampX(offX);
+        offY = clampY(offY);
+        // 与刷新率无关的阻尼：144Hz 上不会「更快贴上去」
+        const ease = (rate) => (reduce ? 1 : 1 - Math.pow(0.001, (dt * rate) / 10));
+        const k = ease(down ? 1.6 : 0.8);
+        x += (offX + driftX - x) * k;
+        y += (offY + driftY - y) * k;
+        scale += (scaleT - scale) * ease(0.9);
+        track.style.transform = `translate3d(${x.toFixed(2)}px, ${y.toFixed(2)}px, 0) scale(${scale.toFixed(4)})`;
+        if (posEl) {
+          const total = Math.max(1, maxY());
+          posEl.textContent = `${Math.round(Math.min(1, Math.max(0, -y / total)) * 100)}%`;
         }
-        requestAnimationFrame(frame);
+        requestAnimationFrame(render);
       };
-      requestAnimationFrame(frame);
+      requestAnimationFrame(render);
 
       root.addEventListener(
         'wheel',
         (e) => {
           e.preventDefault();
-          yt = clampY(yt - e.deltaY * 0.85);
+          offY = clampY(offY - e.deltaY * 0.9);
         },
         { passive: false }
       );
 
-      root.addEventListener('pointermove', (e) => {
-        if (holding) {
-          moved = Math.max(
-            moved,
-            Math.abs(e.clientX - dragFromX) + Math.abs(e.clientY - dragFromY)
-          );
-          xt = clampX(xAtDrag + (e.clientX - dragFromX) * 0.8);
-          yt = clampY(yAtDrag + (e.clientY - dragFromY) * 0.8);
-          return;
-        }
-        const k = (e.clientX / window.innerWidth - 0.5) * 2;
-        xt = clampX(-k * 70);
+      root.addEventListener('pointerdown', (e) => {
+        if (e.button !== 0) return;
+        down = true;
+        moved = 0;
+        fromX = e.clientX;
+        fromY = e.clientY;
+        offAtX = offX;
+        offAtY = offY;
+        scaleT = 0.955;
+        root.classList.add('is-holding');
       });
 
-      root.addEventListener('pointerdown', (e) => {
-        holding = true;
-        moved = 0;
-        zt = 0.962;
-        dragFromX = e.clientX;
-        dragFromY = e.clientY;
-        xAtDrag = x;
-        yAtDrag = y;
-        root.classList.add('is-holding');
-        try {
-          root.setPointerCapture(e.pointerId);
-        } catch {
-          /* 忽略 */
+      window.addEventListener('pointermove', (e) => {
+        if (down) {
+          const dx = e.clientX - fromX;
+          const dy = e.clientY - fromY;
+          moved = Math.max(moved, Math.abs(dx) + Math.abs(dy));
+          offX = clampX(offAtX + dx * 0.9);
+          offY = clampY(offAtY + dy * 0.9);
+          driftX = 0;
+          driftY = 0;
+          return;
         }
+        // 360°：上下左右都跟着指针走
+        const nx = e.clientX / window.innerWidth - 0.5;
+        const ny = e.clientY / window.innerHeight - 0.5;
+        driftX = -nx * 2 * 56;
+        driftY = -ny * 2 * 46;
       });
 
       const release = () => {
-        if (!holding) return;
-        holding = false;
-        zt = 1;
+        if (!down) return;
+        down = false;
+        scaleT = 1;
         root.classList.remove('is-holding');
       };
-      root.addEventListener('pointerup', release);
-      root.addEventListener('pointercancel', release);
       window.addEventListener('pointerup', release);
+      window.addEventListener('pointercancel', release);
       window.addEventListener('blur', release);
-      root.addEventListener('pointerleave', () => {
-        if (!holding) xt = 0;
-      });
 
-      // ---- 查看器 ----
+      // ---- 点开大图 ----
       const vImg = vw.querySelector('[data-cv-img]');
       const vName = vw.querySelector('[data-cv-name]');
       const vMeta = vw.querySelector('[data-cv-meta]');
       const vCount = vw.querySelector('[data-cv-count]');
       let cur = 0;
 
-      const open = (i) => {
+      const openAt = (i) => {
         cur = (i + items.length) % items.length;
         const it = items[cur];
         vImg.src = it.src;
@@ -207,37 +223,36 @@ const jitter = (i: number) => {
         vw.classList.add('is-on');
         document.documentElement.classList.add('is-locked');
       };
-      const close = () => {
+      const closeViewer = () => {
         vw.classList.remove('is-on');
         document.documentElement.classList.remove('is-locked');
       };
 
-      if (!root.dataset.click) {
-        root.dataset.click = '1';
-        root.addEventListener('click', (e) => {
-          const tile = e.target.closest('.cvs__tile');
-          if (!tile) return;
-          if (moved > 8) return; // 拖动过就不算点击
-          open(Number(tile.dataset.i));
-        });
-        vw.addEventListener('click', (e) => {
-          const t = e.target;
-          if (t.closest('[data-cv-prev]')) return open(cur - 1);
-          if (t.closest('[data-cv-next]')) return open(cur + 1);
-          if (t.closest('[data-cv-close]') || t === vw) close();
-        });
-      }
+      root.addEventListener('click', (e) => {
+        if (moved > 6) {
+          moved = 0; // 拖过一次，这一次不算点击
+          return;
+        }
+        const hit = document.elementFromPoint(e.clientX, e.clientY);
+        const tile = e.target.closest?.('.cvs__tile') || hit?.closest('.cvs__tile');
+        if (!tile) return;
+        openAt(Number(tile.dataset.i));
+      });
+
+      vw.addEventListener('click', (e) => {
+        const t = e.target;
+        if (t.closest('[data-cv-prev]')) return openAt(cur - 1);
+        if (t.closest('[data-cv-next]')) return openAt(cur + 1);
+        if (t.closest('[data-cv-close]') || t === vw) closeViewer();
+      });
 
       if (!window.__cvsKeys) {
         window.__cvsKeys = true;
         window.addEventListener('keydown', (e) => {
-          if (vw.classList.contains('is-on')) {
-            if (e.key === 'Escape') close();
-            if (e.key === 'ArrowLeft') open(cur - 1);
-            if (e.key === 'ArrowRight') open(cur + 1);
-            return;
-          }
-          if (e.key === 'Escape') window.location.href = '/work/tiktok/';
+          if (!vw.classList.contains('is-on')) return;
+          if (e.key === 'Escape') closeViewer();
+          if (e.key === 'ArrowLeft') openAt(cur - 1);
+          if (e.key === 'ArrowRight') openAt(cur + 1);
         });
       }
     }
