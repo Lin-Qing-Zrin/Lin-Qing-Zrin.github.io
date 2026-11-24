@@ -2217,65 +2217,52 @@ html.is-locked {
   z-index: 2;
   background: var(--bg);
 }
-/* PRACTICE：一条竖向连通的预览带（不是弹卡），跟着高亮行上下滑 */
+/* PRACTICE：画框自己会走——移到哪一行，方框就滑到哪一行，框里的图跟着一起走 */
 .prac-stage {
   position: relative;
 }
 .prac-peek {
   position: absolute;
   top: 0;
-  left: 40%;
-  width: clamp(230px, 25vw, 360px);
-  height: clamp(300px, 30vw, 420px);
-  overflow: hidden;
+  left: 38%;
+  width: clamp(210px, 23vw, 330px);
+  aspect-ratio: 1 / 1;
   z-index: 2;
   pointer-events: none;
   opacity: 0;
-  transition: opacity 0.32s var(--ease);
+  transform: translate3d(0, var(--py, 0px), 0);
+  transition:
+    opacity 0.3s var(--ease),
+    transform 0.66s var(--ease);
   background: #0d0d0c;
-  outline: 1px solid rgba(236, 233, 227, 0.14);
-  --peek-step: 40%;
+  outline: 1px solid rgba(236, 233, 227, 0.16);
+  will-change: transform, opacity;
 }
 .prac-peek.is-on {
   opacity: 1;
 }
-.prac-peek__strip {
-  display: flex;
-  flex-direction: column;
-  height: 100%;
-  transition: transform 0.62s cubic-bezier(0.16, 1, 0.3, 1);
-  will-change: transform;
-}
-.prac-peek__item {
-  flex: 0 0 var(--peek-step);
-  height: var(--peek-step);
-  margin: 0;
-  display: grid;
-  place-items: center;
-  padding: 0 clamp(8px, 1vw, 14px);
-}
-.prac-peek__item img {
+/* 两层图交叉淡入，换行时不闪白 */
+.prac-peek__img {
+  position: absolute;
+  inset: 0;
   width: 100%;
   height: 100%;
-  object-fit: contain;
-  opacity: 0.3;
-  filter: grayscale(0.5);
-  transition:
-    opacity 0.5s var(--ease),
-    filter 0.5s var(--ease);
+  object-fit: cover;
+  object-position: center;
+  opacity: 0;
+  transition: opacity 0.34s var(--ease);
 }
-.prac-peek__item.is-near img {
+.prac-peek__img.is-front {
   opacity: 1;
-  filter: none;
 }
 /* 圆形 View 徽标 */
 .prac-peek__badge {
   position: absolute;
   left: 50%;
   top: 50%;
-  transform: translate(-50%, -58%);
-  width: 58px;
-  height: 58px;
+  transform: translate(-50%, -50%) scale(0.72);
+  width: 62px;
+  height: 62px;
   border-radius: 50%;
   display: grid;
   place-items: center;
@@ -2287,11 +2274,11 @@ html.is-locked {
   opacity: 0;
   transition:
     opacity 0.3s var(--ease),
-    transform 0.4s var(--ease);
+    transform 0.44s var(--ease);
 }
 .prac-peek.is-on .prac-peek__badge {
   opacity: 1;
-  transform: translate(-50%, -50%);
+  transform: translate(-50%, -50%) scale(1);
 }
 .prac-peek__arrow {
   font-size: 9px;
@@ -2302,13 +2289,13 @@ html.is-locked {
   left: 0;
   right: 0;
   bottom: 0;
-  padding: 8px 0;
+  padding: 10px 0 8px;
   font-size: 9px;
   letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: var(--gray);
+  color: var(--ink-2);
   text-align: center;
-  background: linear-gradient(to top, rgba(13, 13, 12, 0.95), transparent);
+  background: linear-gradient(to top, rgba(13, 13, 12, 0.92), transparent);
 }
 @media (hover: none) {
   .prac-peek {

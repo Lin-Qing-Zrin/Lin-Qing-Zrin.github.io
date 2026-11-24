@@ -221,32 +221,53 @@ import { practice } from '../data/practice';
     document.addEventListener('astro:page-load', bindHeroMorph);
     bindHeroMorph();
 
-    /* PRACTICE：一条竖向连通的预览带，跟着高亮行进的方向上下滑 */
+    /* PRACTICE：画框跟着行移动，框里的图一起走 */
     function bindPracticePeek() {
       const list = document.querySelector<HTMLElement>('[data-prac]');
       const peek = document.querySelector<HTMLElement>('[data-prac-peek]');
-      const strip = document.querySelector<HTMLElement>('[data-peek-strip]');
-      if (!list || !peek || !strip) return;
+      if (!list || !peek) return;
       const W = window as Window & { __pracPeek?: boolean };
       if (W.__pracPeek) return;
       W.__pracPeek = true;
       if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
       if (window.matchMedia('(hover: none)').matches) return;
 
-      const items = [...strip.querySelectorAll<HTMLElement>('.prac-peek__item')];
+      const layers = [...peek.querySelectorAll<HTMLImageElement>('.prac-peek__img')];
       const label = peek.querySelector<HTMLElement>('[data-peek-label]');
-      // 当前高亮项的索引：整条带子按「一格的百分比」平移，所以上下能看见相邻两格的一截
-      const setIndex = (i: number) => {
-        strip.style.transform = `translate3d(0, calc(30% - ${i} * var(--peek-step)), 0)`;
+      let front = 0;
+      let token = 0;
+
+      const show = (src: string) => {
+        const back = layers[1 - front];
+        const my = ++token;
+        back.src = src;
+        const swap = () => {
+          if (my !== token) return;
+          back.classList.add('is-front');
+          layers[front].classList.remove('is-front');
+          front = 1 - front;
+        };
+        // decode() 之后换，避免换图瞬间闪白
+        if (back.decode) back.decode().then(swap).catch(swap);
+        else swap();
+      };
+
+      // 画框中心对齐到目标行的中线，并夹在列表范围里
+      const moveTo = (row: HTMLElement) => {
+        const stageH = list.offsetHeight;
+        const boxH = peek.offsetHeight;
+        const center = row.offsetTop + row.offsetHeight / 2;
+        const py = Math.max(0, Math.min(stageH - boxH, center - boxH / 2));
+        peek.style.setProperty('--py', `${Math.round(py)}px`);
       };
 
       list.querySelectorAll<HTMLElement>('[data-peek-index]').forEach((a) => {
-        const i = Number(a.dataset.peekIndex ?? 0);
         a.addEventListener('pointerenter', () => {
-          setIndex(i);
+          const row = a.closest('li') ?? a;
+          moveTo(row as HTMLElement);
+          if (a.dataset.peekSrc) show(a.dataset.peekSrc);
           if (label) label.textContent = a.dataset.peekLabel ?? '';
           peek.classList.add('is-on');
-          items.forEach((el, k) => el.classList.toggle('is-near', Math.abs(k - i) <= 1));
         });
       });
       list.addEventListener('pointerleave', () => peek.classList.remove('is-on'));
@@ -266,7 +287,13 @@ import { practice } from '../data/practice';
       <ol class="prac" data-prac>
         {practice.map((e, i) => (
           <li class="prac__row" data-reveal style={`--d:${i}`}>
-            <a href={e.href} data-cursor="hover" data-peek-index={i} data-peek-label={e.cn}>
+            <a
+              href={e.href}
+              data-cursor="hover"
+              data-peek-index={i}
+              data-peek-src={e.img}
+              data-peek-label={e.cn}
+            >
               <span class="mono prac__no">{e.no}</span>
               <span class="prac__en">{e.en}</span>
               <span class="prac__cn">{e.cn}</span>
@@ -278,13 +305,8 @@ import { practice } from '../data/practice';
       </ol>
 
       <div class="prac-peek" data-prac-peek aria-hidden="true">
-        <div class="prac-peek__strip" data-peek-strip>
-          {practice.map((e) => (
-            <figure class="prac-peek__item">
-              <img src={e.img} alt="" loading="lazy" decoding="async" />
-            </figure>
-          ))}
-        </div>
+        <img class="prac-peek__img is-front" alt="" decoding="async" />
+        <img class="prac-peek__img" alt="" decoding="async" />
         <span class="prac-peek__badge">View<span class="prac-peek__arrow">↗</span></span>
         <span class="prac-peek__label mono" data-peek-label></span>
       </div>
