@@ -1,0 +1,351 @@
+---
+import Base from '../../layouts/Base.astro';
+
+const stages = [
+  {
+    k: '01',
+    label: 'SCOPE',
+    title: '先做一关，不做一个游戏',
+    body:
+      '目标写死：竹林 → 山门 → 一场遭遇战，10–15 分钟，能从头走到尾。不做开放世界，不做养成，不做联机。',
+    note: '判定标准：朋友从坐下到放下手柄，中间不需要我解释怎么玩。',
+  },
+  {
+    k: '02',
+    label: 'WORLD',
+    title: '竹林、山门、雾',
+    body:
+      '美术方向是「低饱和 + 逆光」。竹叶不铺满，留出能看见远处山门的空隙；雾用来遮掉视距外的边界，也用来把镜头压慢。',
+    note: '引擎：UE5.8，Lumen + 体积雾，场景全部自己搭。',
+  },
+  {
+    k: '03',
+    label: 'CHARACTER',
+    title: '玄衣游侠',
+    body:
+      '主角是一张 T-pose 设定：黑灰暗纹短打、暗红腰带、皮质护腕、长下摆分段剪裁。做这套是因为我想让布料在跑动时有东西可动。',
+    note: 'AI 出第一版概念稿，我改比例、收腰线、重做腰带结构。',
+  },
+  {
+    k: '04',
+    label: 'COMBAT',
+    title: '三连击 + 一次闪避',
+    body:
+      '只做一套基础连招：轻击三连、重击一刀、闪避带无敌帧。手感目标是「每次按键都有回应」——前摇短、反馈响、命中停 80ms。',
+    note: '参考《黑神话：悟空》的读招节奏，但把数值压到能一关打完。',
+  },
+  {
+    k: '05',
+    label: 'NOW',
+    title: '到哪了',
+    body:
+      '策划文档已到 v2.1，主角设定定稿，竹林入口的第一段跑图已经能走。战斗和山门遭遇战在排期里。',
+    note: '进度是慢的，但它不是 demo 视频，是一个真能玩下去的东西。',
+  },
+];
+---
+
+<Base
+  title="Game — 刘启征"
+  description="An in-progress Wuxia action level built in Unreal Engine 5: bamboo forest, mountain gate, one fight."
+>
+  <section class="lv" data-lv>
+    <header class="lv-head mono">
+      <a href="/work/">← WORK</a>
+      <span>03 / 07 · GAME · 游戏开发</span>
+      <span>IN PROGRESS</span>
+    </header>
+
+    <div class="lv-body">
+      <div class="lv-left">
+        <p class="mono lv-kicker">LEVEL 01 — 竹林古寺</p>
+        <h1 class="lv-title">竹林古寺</h1>
+        <p class="lv-sub">A Wuxia action level, built alone in Unreal Engine 5.</p>
+
+        <nav class="lv-rail" aria-label="开发阶段">
+          {stages.map((s, i) => (
+            <button
+              class={`lv-step${i === 0 ? ' is-on' : ''}`}
+              type="button"
+              data-step={i}
+              aria-pressed={i === 0 ? 'true' : 'false'}
+            >
+              <span class="mono lv-step__k">{s.k}</span>
+              <span class="mono lv-step__label">{s.label}</span>
+              <span class="lv-step__title">{s.title}</span>
+              <span class="lv-step__bar" aria-hidden="true"></span>
+            </button>
+          ))}
+        </nav>
+      </div>
+
+      <div class="lv-right">
+        <figure class="lv-figure">
+          <img src="/images/game/concept.webp" alt="玄衣游侠 正面 T-pose 设定" />
+          <span class="lv-dot" style="--x:50%;--y:7%" data-for="3"></span>
+          <span class="lv-dot" style="--x:58%;--y:36%" data-for="3"></span>
+          <span class="lv-dot" style="--x:44%;--y:62%" data-for="3"></span>
+          <span class="lv-dot" style="--x:52%;--y:88%" data-for="3"></span>
+          <figcaption class="mono">CHARACTER SHEET · 玄衣游侠 · T-POSE v2</figcaption>
+        </figure>
+
+        <div class="lv-card">
+          {stages.map((s, i) => (
+            <div class={`lv-panel${i === 0 ? ' is-on' : ''}`} data-panel={i}>
+              <p class="lv-panel__title">{s.title}</p>
+              <p class="lv-panel__body">{s.body}</p>
+              <p class="lv-panel__note mono">{s.note}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+
+    <footer class="lv-foot mono">
+      <span>PRD v2.1 · UE5.8 · 独立开发</span>
+      <span>下一阶段：山门遭遇战</span>
+    </footer>
+  </section>
+
+  <script>
+    const root = document.querySelector('[data-lv]');
+    if (root) {
+      const steps = [...root.querySelectorAll('[data-step]')];
+      const panels = [...root.querySelectorAll('[data-panel]')];
+      const dots = [...root.querySelectorAll('.lv-dot')];
+      const setStage = (i) => {
+        steps.forEach((s, k) => {
+          s.classList.toggle('is-on', k === i);
+          s.setAttribute('aria-pressed', k === i ? 'true' : 'false');
+        });
+        panels.forEach((p, k) => p.classList.toggle('is-on', k === i));
+        dots.forEach((d) => d.classList.toggle('is-on', Number(d.dataset.for) === i));
+      };
+      steps.forEach((s, i) => {
+        s.addEventListener('click', () => setStage(i));
+        s.addEventListener('pointerenter', () => setStage(i));
+      });
+      setStage(0);
+    }
+  </script>
+</Base>
+
+<style>
+  .lv {
+    padding: 0 var(--pad) clamp(48px, 7vw, 96px);
+  }
+
+  .lv-head {
+    display: flex;
+    justify-content: space-between;
+    gap: 20px;
+    padding: 84px 0 22px;
+    font-size: 10px;
+    letter-spacing: 0.16em;
+    color: var(--gray);
+    border-bottom: 1px solid var(--line);
+  }
+  .lv-head a {
+    color: var(--ink);
+    text-decoration: none;
+  }
+  .lv-head a:hover {
+    color: var(--accent);
+  }
+
+  .lv-body {
+    display: grid;
+    grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+    gap: clamp(28px, 4vw, 72px);
+    padding-top: clamp(36px, 5vw, 72px);
+  }
+
+  .lv-kicker {
+    font-size: 10px;
+    letter-spacing: 0.18em;
+    color: var(--accent);
+    margin-bottom: 14px;
+  }
+  .lv-title {
+    font-family: var(--font-display);
+    font-size: clamp(48px, 7vw, 118px);
+    line-height: 0.92;
+    letter-spacing: -0.02em;
+    margin: 0 0 12px;
+  }
+  .lv-sub {
+    font-size: 14px;
+    color: var(--ink-2);
+    margin-bottom: clamp(26px, 3.4vw, 44px);
+  }
+
+  .lv-rail {
+    display: flex;
+    flex-direction: column;
+  }
+  .lv-step {
+    position: relative;
+    display: grid;
+    grid-template-columns: 34px 78px minmax(0, 1fr);
+    align-items: baseline;
+    gap: 12px;
+    padding: 16px 0 16px;
+    background: none;
+    border: 0;
+    border-top: 1px solid var(--line);
+    text-align: left;
+    color: var(--gray);
+    cursor: pointer;
+    transition: color 0.35s var(--ease);
+  }
+  .lv-step:last-child {
+    border-bottom: 1px solid var(--line);
+  }
+  .lv-step__k {
+    font-size: 10px;
+    letter-spacing: 0.14em;
+  }
+  .lv-step__label {
+    font-size: 9.5px;
+    letter-spacing: 0.16em;
+  }
+  .lv-step__title {
+    font-family: var(--font-display);
+    font-size: clamp(17px, 1.8vw, 24px);
+    letter-spacing: -0.01em;
+    color: var(--ink-2);
+    transition: color 0.35s var(--ease), transform 0.45s var(--ease);
+  }
+  .lv-step__bar {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: -1px;
+    height: 1px;
+    background: var(--accent);
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 0.55s var(--ease);
+  }
+  .lv-step.is-on {
+    color: var(--ink);
+  }
+  .lv-step.is-on .lv-step__title {
+    color: var(--ink);
+    transform: translateX(8px);
+  }
+  .lv-step.is-on .lv-step__bar {
+    transform: scaleX(1);
+  }
+
+  .lv-right {
+    display: flex;
+    flex-direction: column;
+    gap: clamp(18px, 2.4vw, 32px);
+  }
+
+  .lv-figure {
+    position: relative;
+    margin: 0;
+    background: var(--bg-deep);
+    overflow: hidden;
+  }
+  .lv-figure img {
+    display: block;
+    width: 100%;
+    height: auto;
+  }
+  .lv-figure figcaption {
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    padding: 10px 14px;
+    font-size: 9px;
+    letter-spacing: 0.16em;
+    color: var(--ink-2);
+    background: rgba(8, 8, 7, 0.7);
+  }
+  .lv-dot {
+    position: absolute;
+    left: var(--x);
+    top: var(--y);
+    width: 9px;
+    height: 9px;
+    margin: -4.5px 0 0 -4.5px;
+    border-radius: 50%;
+    background: var(--accent);
+    box-shadow: 0 0 0 5px rgba(215, 255, 63, 0.14);
+    opacity: 0;
+    transform: scale(0.4);
+    transition: opacity 0.5s var(--ease), transform 0.5s var(--ease);
+  }
+  .lv-dot.is-on {
+    opacity: 1;
+    transform: none;
+  }
+
+  .lv-card {
+    position: relative;
+    min-height: 132px;
+    border-top: 1px solid var(--line);
+    padding-top: 18px;
+  }
+  .lv-panel {
+    position: absolute;
+    inset: 18px 0 auto 0;
+    opacity: 0;
+    transform: translateY(8px);
+    transition: opacity 0.45s var(--ease), transform 0.45s var(--ease);
+    pointer-events: none;
+  }
+  .lv-panel.is-on {
+    position: relative;
+    inset: auto;
+    opacity: 1;
+    transform: none;
+    pointer-events: auto;
+  }
+  .lv-panel__title {
+    display: none;
+  }
+  .lv-panel__body {
+    font-size: 15px;
+    line-height: 1.9;
+    color: var(--ink-2);
+    margin-bottom: 12px;
+    max-width: 46ch;
+  }
+  .lv-panel__note {
+    font-size: 9.5px;
+    letter-spacing: 0.1em;
+    color: var(--accent);
+    line-height: 1.8;
+  }
+
+  .lv-foot {
+    display: flex;
+    justify-content: space-between;
+    margin-top: clamp(36px, 5vw, 64px);
+    padding-top: 18px;
+    border-top: 1px solid var(--line);
+    font-size: 9.5px;
+    letter-spacing: 0.16em;
+    color: var(--gray);
+  }
+
+  @media (max-width: 900px) {
+    .lv-body {
+      grid-template-columns: minmax(0, 1fr);
+    }
+    .lv-right {
+      order: -1;
+    }
+    .lv-step {
+      grid-template-columns: 30px 64px minmax(0, 1fr);
+    }
+  }
+
+  .lv-head > span:last-child {
+    margin-right: 104px;
+  }
+</style>

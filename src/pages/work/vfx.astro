@@ -1,0 +1,301 @@
+---
+import Base from '../../layouts/Base.astro';
+
+const frames = [
+  {
+    n: '01',
+    t: '星月夜',
+    sub: '粒子体素 · 3D 重绘',
+    src: '/images/tiktok/s6/01.webp',
+    z: 90,
+    x: 2,
+    y: 4,
+    s: 1,
+    note: '把《星月夜》做成上万颗粒子，用体积光扫过去。',
+  },
+  {
+    n: '02',
+    t: '守岸人',
+    sub: '角色渲染 · 材质测试',
+    src: '/images/tiktok/s2/01.webp',
+    z: 180,
+    x: 30,
+    y: -8,
+    s: 0.82,
+    note: '布料、皮肤、水面的三套材质放一张里对。',
+  },
+  {
+    n: '03',
+    t: '绯雪',
+    sub: '角色渲染 · 体积雾',
+    src: '/images/tiktok/s2/02.webp',
+    z: 40,
+    x: 58,
+    y: 14,
+    s: 0.94,
+    note: '逆光 + 体积雾，试的是「亮到刺眼但还看得清轮廓」。',
+  },
+];
+---
+
+<Base
+  title="3D & VFX — 刘启征"
+  description="3D and VFX studies: particle renders, character materials and volumetric fog."
+>
+  <section class="vf" data-vf>
+    <header class="vf-head mono">
+      <a href="/work/">← WORK</a>
+      <span>04 / 07 · 3D &amp; VFX · 特效</span>
+      <span>{frames.length} PIECES</span>
+    </header>
+
+    <div class="vf-intro">
+      <h1 class="vf-title">Field</h1>
+      <p class="vf-sub">
+        三张渲染。都是自己搭场景、自己打光、自己调材质——这一组我想让画面有「厚度」。
+      </p>
+      <p class="mono vf-hint">移动鼠标：整面墙会跟着轻轻偏 · 点一张看大图</p>
+    </div>
+
+    <div class="vf-stage" data-stage>
+      <div class="vf-plane" data-plane>
+        {frames.map((f) => (
+          <figure
+            class="vf-frame"
+            style={`--z:${f.z}px;--x:${f.x}%;--y:${f.y}%;--s:${f.s}`}
+            data-frame
+          >
+            <img src={f.src} alt={f.t} draggable="false" loading="lazy" />
+            <figcaption>
+              <span class="mono vf-frame__n">{f.n}</span>
+              <span class="vf-frame__t">{f.t}</span>
+              <span class="mono vf-frame__s">{f.sub}</span>
+            </figcaption>
+          </figure>
+        ))}
+      </div>
+      <div class="vf-notes">
+        {frames.map((f) => (
+          <p class="mono vf-note">
+            <span>{f.n}</span>
+            {f.note}
+          </p>
+        ))}
+      </div>
+    </div>
+
+    <footer class="vf-foot mono">
+      <span>BLENDER · UE5 · 粒子 / 体积光 / 材质</span>
+      <a href="/work/">ALL CATEGORIES →</a>
+    </footer>
+  </section>
+
+  <script>
+    const stage = document.querySelector('[data-stage]');
+    const plane = document.querySelector('[data-plane]');
+    if (stage && plane) {
+      const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      let tx = 0;
+      let ty = 0;
+      let cx = 0;
+      let cy = 0;
+      if (!reduce) {
+        stage.addEventListener('pointermove', (e) => {
+          const r = stage.getBoundingClientRect();
+          tx = ((e.clientX - r.left) / r.width - 0.5) * 2;
+          ty = ((e.clientY - r.top) / r.height - 0.5) * 2;
+        });
+        stage.addEventListener('pointerleave', () => {
+          tx = 0;
+          ty = 0;
+        });
+        const loop = () => {
+          cx += (tx - cx) * 0.07;
+          cy += (ty - cy) * 0.07;
+          plane.style.transform = `rotateY(${(cx * 7).toFixed(2)}deg) rotateX(${(-cy * 5).toFixed(2)}deg)`;
+          requestAnimationFrame(loop);
+        };
+        loop();
+      }
+    }
+  </script>
+</Base>
+
+<style>
+  .vf {
+    padding: 0 var(--pad) clamp(48px, 7vw, 96px);
+  }
+
+  .vf-head {
+    display: flex;
+    justify-content: space-between;
+    gap: 20px;
+    padding: 84px 0 22px;
+    font-size: 10px;
+    letter-spacing: 0.16em;
+    color: var(--gray);
+    border-bottom: 1px solid var(--line);
+  }
+  .vf-head a {
+    color: var(--ink);
+    text-decoration: none;
+  }
+  .vf-head a:hover {
+    color: var(--accent);
+  }
+
+  .vf-intro {
+    padding: clamp(32px, 4.4vw, 60px) 0 clamp(18px, 2.4vw, 30px);
+  }
+  .vf-title {
+    font-family: var(--font-display);
+    font-size: clamp(52px, 9vw, 150px);
+    line-height: 0.88;
+    letter-spacing: -0.04em;
+    margin: 0 0 14px;
+  }
+  .vf-sub {
+    max-width: 46ch;
+    font-size: 15px;
+    line-height: 1.9;
+    color: var(--ink-2);
+  }
+  .vf-hint {
+    margin-top: 16px;
+    font-size: 9.5px;
+    letter-spacing: 0.16em;
+    color: var(--gray);
+  }
+
+  .vf-stage {
+    position: relative;
+    perspective: 1100px;
+    padding: clamp(20px, 3vw, 44px) 0 clamp(10px, 2vw, 24px);
+  }
+
+  .vf-plane {
+    position: relative;
+    height: clamp(320px, 38vw, 540px);
+    transform-style: preserve-3d;
+    will-change: transform;
+  }
+
+  .vf-frame {
+    position: absolute;
+    left: var(--x);
+    top: 50%;
+    width: clamp(150px, 19vw, 292px);
+    margin: 0;
+    transform: translateY(-50%) translateZ(var(--z)) scale(var(--s));
+    transition: filter 0.5s var(--ease), scale 0.6s var(--ease);
+    filter: saturate(0.95);
+  }
+  .vf-frame:nth-child(1) {
+    top: 46%;
+  }
+  .vf-frame:nth-child(2) {
+    top: 40%;
+  }
+  .vf-frame:nth-child(3) {
+    top: 58%;
+  }
+  .vf-frame img {
+    display: block;
+    width: 100%;
+    height: auto;
+    border: 1px solid rgba(236, 233, 227, 0.12);
+    box-shadow: 0 30px 70px rgba(0, 0, 0, 0.55);
+  }
+  .vf-frame figcaption {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+    padding-top: 10px;
+    font-size: 11px;
+  }
+  .vf-frame__n {
+    font-size: 9px;
+    letter-spacing: 0.14em;
+    color: var(--accent);
+  }
+  .vf-frame__t {
+    color: var(--ink);
+  }
+  .vf-frame__s {
+    font-size: 9px;
+    letter-spacing: 0.12em;
+    color: var(--gray);
+  }
+
+  @media (hover: hover) {
+    .vf-frame:hover {
+      filter: none;
+      scale: 1.04;
+    }
+    .vf-frame:hover ~ .vf-frame,
+    .vf-frame:has(~ .vf-frame:hover) {
+      opacity: 0.72;
+    }
+  }
+
+  .vf-notes {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: clamp(16px, 2.4vw, 36px);
+    margin-top: clamp(18px, 2.6vw, 36px);
+    padding-top: 16px;
+    border-top: 1px solid var(--line);
+  }
+  .vf-note {
+    font-size: 9.5px;
+    line-height: 1.9;
+    letter-spacing: 0.08em;
+    color: var(--gray);
+  }
+  .vf-note span {
+    display: block;
+    color: var(--accent);
+    margin-bottom: 6px;
+  }
+
+  .vf-foot {
+    display: flex;
+    justify-content: space-between;
+    margin-top: clamp(30px, 4vw, 52px);
+    padding-top: 18px;
+    border-top: 1px solid var(--line);
+    font-size: 9.5px;
+    letter-spacing: 0.16em;
+    color: var(--gray);
+  }
+  .vf-foot a {
+    color: var(--ink);
+    text-decoration: none;
+  }
+  .vf-foot a:hover {
+    color: var(--accent);
+  }
+
+  @media (max-width: 860px) {
+    .vf-plane {
+      height: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 22px;
+    }
+    .vf-frame {
+      position: relative;
+      left: auto;
+      top: auto !important;
+      width: 100%;
+      transform: none;
+    }
+    .vf-notes {
+      grid-template-columns: minmax(0, 1fr);
+    }
+  }
+
+  .vf-head > span:last-child {
+    margin-right: 104px;
+  }
+</style>

@@ -1,0 +1,328 @@
+---
+import Base from '../../layouts/Base.astro';
+
+const chips = [
+  { name: 'Ink', hex: '#0c0c0c' },
+  { name: 'Paper', hex: '#f2f0eb' },
+  { name: 'Amber', hex: '#e0a32e' },
+];
+---
+
+<Base
+  title="Identity — 刘启征"
+  description="LUMIN / 明序工作室 — a geometric sun-and-moon wordmark, constructed on a grid."
+>
+  <section class="id" data-id>
+    <header class="id-head mono">
+      <a href="/work/">← WORK</a>
+      <span>06 / 07 · IDENTITY · 品牌设计</span>
+      <span>1 PIECE</span>
+    </header>
+
+    <div class="id-intro">
+      <p class="mono id-kicker">日月 · 几何字标</p>
+      <h1 class="id-title">LUMIN</h1>
+      <p class="id-sub">
+        明序工作室：日与月叠在一处，只剩一道月牙。用两个整圆和一次偏移做完，不做任何修饰。
+      </p>
+      <button class="id-toggle mono" type="button" data-grid-toggle aria-pressed="false">
+        <span data-toggle-label>显示构造网格</span>
+        <kbd>G</kbd>
+      </button>
+    </div>
+
+    <figure class="id-plate" data-plate>
+      <img src="/images/identity/lumin.webp" alt="LUMIN 日月几何字标" />
+      <span class="id-guide id-guide--v" aria-hidden="true"></span>
+      <span class="id-guide id-guide--h" aria-hidden="true"></span>
+      <span class="id-guide id-guide--c" aria-hidden="true"></span>
+      <figcaption class="mono">SUN + MOON · 2 CIRCLES · 1 OFFSET</figcaption>
+    </figure>
+
+    <div class="id-specs">
+      <div class="id-spec">
+        <p class="mono id-spec__k">COLOR</p>
+        <ul class="id-chips">
+          {chips.map((c) => (
+            <li class="id-chip">
+              <span class="id-chip__sw" style={`background:${c.hex}`}></span>
+              <span class="mono id-chip__name">{c.name}</span>
+              <span class="mono id-chip__hex">{c.hex}</span>
+            </li>
+          ))}
+        </ul>
+      </div>
+
+      <div class="id-spec">
+        <p class="mono id-spec__k">TYPE</p>
+        <p class="id-type id-type--latin">A B C D E F G</p>
+        <p class="id-type id-type--cn">明 序 工 作 室</p>
+      </div>
+
+      <div class="id-spec">
+        <p class="mono id-spec__k">CLEAR SPACE</p>
+        <p class="id-note">
+          标识四周留白不小于月牙缺口的高度；小于 24px 时只保留图形，不带字标。
+        </p>
+      </div>
+    </div>
+
+    <footer class="id-foot mono">
+      <span>ILLUSTRATOR · 手工构造 · 单色可用</span>
+      <a href="/work/">ALL CATEGORIES →</a>
+    </footer>
+  </section>
+
+  <script>
+    const root = document.querySelector('[data-id]');
+    if (root) {
+      const plate = root.querySelector('[data-plate]');
+      const btn = root.querySelector('[data-grid-toggle]');
+      const label = root.querySelector('[data-toggle-label]');
+      const flip = () => {
+        const on = plate.classList.toggle('show-grid');
+        btn.setAttribute('aria-pressed', on ? 'true' : 'false');
+        label.textContent = on ? '隐藏构造网格' : '显示构造网格';
+      };
+      btn.addEventListener('click', flip);
+      window.addEventListener('keydown', (e) => {
+        if (e.key.toLowerCase() === 'g' && !e.metaKey && !e.ctrlKey) flip();
+      });
+    }
+  </script>
+</Base>
+
+<style>
+  .id {
+    padding: 0 var(--pad) clamp(48px, 7vw, 96px);
+  }
+
+  .id-head {
+    display: flex;
+    justify-content: space-between;
+    gap: 20px;
+    padding: 84px 0 22px;
+    font-size: 10px;
+    letter-spacing: 0.16em;
+    color: var(--gray);
+    border-bottom: 1px solid var(--line);
+  }
+  .id-head a {
+    color: var(--ink);
+    text-decoration: none;
+  }
+  .id-head a:hover {
+    color: var(--accent);
+  }
+
+  .id-intro {
+    display: block;
+    padding: clamp(32px, 4.4vw, 60px) 0 clamp(20px, 2.6vw, 34px);
+  }
+  .id-kicker {
+    font-size: 10px;
+    letter-spacing: 0.16em;
+    color: var(--accent);
+    margin-bottom: 12px;
+  }
+  .id-title {
+    font-family: var(--font-display);
+    font-size: clamp(44px, 7vw, 118px);
+    line-height: 0.9;
+    letter-spacing: 0.02em;
+    margin: 0 0 14px;
+  }
+  .id-sub {
+    max-width: 44ch;
+    font-size: 14.5px;
+    line-height: 1.9;
+    color: var(--ink-2);
+  }
+
+  .id-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 11px 16px;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    background: none;
+    color: var(--ink-2);
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    cursor: pointer;
+    transition: color 0.3s var(--ease), border-color 0.3s var(--ease);
+    white-space: nowrap;
+  }
+  .id-toggle:hover,
+  .id-toggle[aria-pressed='true'] {
+    color: var(--accent);
+    border-color: var(--accent);
+  }
+  .id-toggle kbd {
+    font: inherit;
+    font-size: 9px;
+    padding: 2px 5px;
+    border: 1px solid currentColor;
+    border-radius: 3px;
+    opacity: 0.7;
+  }
+
+  .id-plate {
+    position: relative;
+    margin: 0;
+    overflow: hidden;
+    background: #f2f0eb;
+  }
+  .id-plate img {
+    display: block;
+    width: 100%;
+    height: auto;
+  }
+  .id-plate figcaption {
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    padding: 9px 13px;
+    font-size: 9px;
+    letter-spacing: 0.14em;
+    color: #0c0c0c;
+    background: rgba(242, 240, 235, 0.86);
+  }
+
+  .id-guide {
+    position: absolute;
+    background: rgba(26, 60, 255, 0.75);
+    opacity: 0;
+    transition: opacity 0.4s var(--ease);
+  }
+  .id-guide--v {
+    left: 0;
+    right: 0;
+    top: 50%;
+    height: 1px;
+  }
+  .id-guide--h {
+    top: 0;
+    bottom: 0;
+    left: 50%;
+    width: 1px;
+  }
+  .id-guide--c {
+    top: 50%;
+    left: 50%;
+    width: min(46vw, 520px);
+    aspect-ratio: 1;
+    height: auto;
+    translate: -50% -50%;
+    border: 1px dashed rgba(26, 60, 255, 0.5);
+    background: none;
+    border-radius: 50%;
+  }
+  .id-plate.show-grid .id-guide {
+    opacity: 1;
+  }
+  .id-plate.show-grid::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image: linear-gradient(rgba(26, 60, 255, 0.12) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(26, 60, 255, 0.12) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+  }
+
+  .id-specs {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: clamp(20px, 3vw, 48px);
+    margin-top: clamp(28px, 3.6vw, 48px);
+  }
+  .id-spec {
+    padding-top: 16px;
+    border-top: 1px solid var(--line);
+  }
+  .id-spec__k {
+    font-size: 9.5px;
+    letter-spacing: 0.16em;
+    color: var(--gray);
+    margin-bottom: 14px;
+  }
+
+  .id-chips {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .id-chip {
+    display: grid;
+    grid-template-columns: 20px minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 10px;
+    font-size: 9.5px;
+    letter-spacing: 0.1em;
+  }
+  .id-chip__sw {
+    width: 20px;
+    height: 20px;
+    border: 1px solid var(--line);
+  }
+  .id-chip__name {
+    color: var(--ink-2);
+  }
+  .id-chip__hex {
+    color: var(--gray);
+  }
+
+  .id-type {
+    font-family: var(--font-display);
+    font-size: clamp(18px, 2vw, 26px);
+    letter-spacing: 0.06em;
+    color: var(--ink-2);
+    margin-bottom: 6px;
+  }
+  .id-type--cn {
+    letter-spacing: 0.3em;
+  }
+
+  .id-note {
+    font-size: 13px;
+    line-height: 1.9;
+    color: var(--ink-2);
+  }
+
+  .id-foot {
+    display: flex;
+    justify-content: space-between;
+    margin-top: clamp(32px, 4vw, 56px);
+    padding-top: 18px;
+    border-top: 1px solid var(--line);
+    font-size: 9.5px;
+    letter-spacing: 0.16em;
+    color: var(--gray);
+  }
+  .id-foot a {
+    color: var(--ink);
+    text-decoration: none;
+  }
+  .id-foot a:hover {
+    color: var(--accent);
+  }
+
+  @media (max-width: 860px) {
+    .id-intro {
+      grid-template-columns: minmax(0, 1fr);
+      align-items: start;
+    }
+    .id-specs {
+      grid-template-columns: minmax(0, 1fr);
+    }
+  }
+
+  .id-head > span:last-child {
+    margin-right: 104px;
+  }
+</style>

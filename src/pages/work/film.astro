@@ -1,0 +1,268 @@
+---
+import Base from '../../layouts/Base.astro';
+
+const films = [
+  {
+    n: '01',
+    title: '此心光明',
+    en: 'This Heart, Bright',
+    sub: '王阳明 · 心学之路与内在觉醒',
+    year: '2026',
+    len: '80s',
+    ratio: '16:9',
+    cover: '/images/film/wangyangming.webp',
+    tools: 'AI 生成 · 分镜 · 剪辑',
+    blurb: '80 秒讲完王阳明：把「心即理」拆成三个能看懂的镜头段落，全部画面由 AI 生成。',
+    role: '脚本 / 分镜 / 生成 / 剪辑',
+  },
+  {
+    n: '02',
+    title: '再等冬天',
+    en: 'Wait For Winter',
+    sub: 'MV · 音乐短片',
+    year: '2025',
+    len: '—',
+    ratio: '16:9',
+    cover: '/images/film/mv-winter.webp',
+    tools: 'AI 生成 · 调色 · 合成',
+    blurb: '一首歌的时间，把冬天的冷和等一个人的热放在同一条时间线上。',
+    role: '画面 / 剪辑 / 调色',
+  },
+  {
+    n: '03',
+    title: '苏轼',
+    en: 'Su Shi',
+    sub: 'vibe 系列 · 人物短片',
+    year: '2026',
+    len: '—',
+    ratio: '16:9',
+    cover: '/images/film/su-shi.webp',
+    tools: 'AI 生成 · 剪辑',
+    blurb: 'vibe 系列的第二个人物。比起讲他的生平，我更想拍他站在风里的那一下。',
+    role: '画面 / 剪辑',
+  },
+];
+---
+
+<Base
+  title="Film — 刘启征"
+  description="AI film work: 王阳明, 苏轼 and a winter MV. Three short pieces, cut by one person."
+>
+  <section class="reel" data-reel>
+    <header class="reel-head mono">
+      <a href="/work/" class="reel-back">← WORK</a>
+      <span>02 / 07 · FILM · 影像</span>
+      <span>{films.length} PIECES</span>
+    </header>
+
+    {films.map((f, i) => (
+      <article class="take" style={`--i:${i}`} data-take>
+        <div class="take__text">
+          <p class="mono take__n">{f.n} — TAKE</p>
+          <h2 class="take__title">{f.title}</h2>
+          <p class="take__en">{f.en} · {f.sub}</p>
+          <p class="take__blurb">{f.blurb}</p>
+          <dl class="take__meta mono">
+            <div><dt>YEAR</dt><dd>{f.year}</dd></div>
+            <div><dt>LEN</dt><dd>{f.len}</dd></div>
+            <div><dt>RATIO</dt><dd>{f.ratio}</dd></div>
+            <div><dt>ROLE</dt><dd>{f.role}</dd></div>
+            <div><dt>TOOLS</dt><dd>{f.tools}</dd></div>
+          </dl>
+        </div>
+        <figure class="take__frame">
+          <img src={f.cover} alt={`${f.title} 画面`} loading={i === 0 ? 'eager' : 'lazy'} />
+          <span class="take__scan" aria-hidden="true"></span>
+          <figcaption class="mono">FRAME {f.n} · {f.sub}</figcaption>
+        </figure>
+      </article>
+    ))}
+
+    <footer class="reel-foot mono">
+      <span>SCROLL ↓ 继续</span>
+      <a href="/work/">ALL CATEGORIES →</a>
+    </footer>
+  </section>
+
+  <script>
+    const reel = document.querySelector('[data-reel]');
+    if (reel) {
+      const takes = [...reel.querySelectorAll('[data-take]')];
+      const io = new IntersectionObserver(
+        (entries) => {
+          for (const e of entries) {
+            if (e.isIntersecting) e.target.classList.add('is-live');
+          }
+        },
+        { threshold: 0.35 }
+      );
+      takes.forEach((t) => io.observe(t));
+    }
+  </script>
+</Base>
+
+<style>
+  .reel {
+    padding-bottom: clamp(40px, 6vw, 80px);
+  }
+
+  .reel-head {
+    position: sticky;
+    top: 0;
+    z-index: 5;
+    display: flex;
+    justify-content: space-between;
+    gap: 24px;
+    padding: 78px var(--pad) 18px;
+    background: linear-gradient(to bottom, var(--bg) 70%, transparent);
+    font-size: 10px;
+    letter-spacing: 0.16em;
+    color: var(--gray);
+  }
+  .reel-back {
+    color: var(--ink);
+    text-decoration: none;
+    letter-spacing: 0.16em;
+  }
+  .reel-back:hover {
+    color: var(--accent);
+  }
+
+  .take {
+    display: grid;
+    grid-template-columns: minmax(0, 0.82fr) minmax(0, 1.18fr);
+    gap: clamp(24px, 3.4vw, 56px);
+    align-items: center;
+    min-height: 100svh;
+    padding: clamp(24px, 4vw, 56px) var(--pad);
+    border-top: 1px solid var(--line);
+  }
+  .take:first-of-type {
+    border-top: 0;
+  }
+
+  .take__n {
+    font-size: 10px;
+    letter-spacing: 0.18em;
+    color: var(--accent);
+    margin-bottom: clamp(12px, 1.6vw, 20px);
+  }
+  .take__title {
+    font-family: var(--font-display);
+    font-size: clamp(44px, 6.4vw, 104px);
+    line-height: 0.94;
+    letter-spacing: -0.02em;
+    margin: 0 0 10px;
+  }
+  .take__en {
+    font-size: 13px;
+    letter-spacing: 0.06em;
+    color: var(--ink-2);
+    margin-bottom: clamp(16px, 2vw, 26px);
+  }
+  .take__blurb {
+    max-width: 34ch;
+    font-size: 15px;
+    line-height: 1.85;
+    color: var(--ink-2);
+    margin-bottom: clamp(20px, 2.6vw, 34px);
+  }
+  .take__meta {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px 20px;
+    padding-top: 18px;
+    border-top: 1px solid var(--line);
+    font-size: 9.5px;
+    letter-spacing: 0.14em;
+  }
+  .take__meta dt {
+    color: var(--gray);
+    margin-bottom: 4px;
+  }
+  .take__meta dd {
+    margin: 0;
+    color: var(--ink);
+    letter-spacing: 0.04em;
+  }
+
+  .take__frame {
+    position: relative;
+    margin: 0;
+    overflow: hidden;
+    background: var(--bg-deep);
+  }
+  .take__frame img {
+    display: block;
+    width: 100%;
+    height: auto;
+    transform: scale(1.02);
+    transition: transform 1.2s var(--ease), filter 0.8s var(--ease);
+    filter: saturate(0.94) contrast(1.02);
+  }
+  .take__frame:hover img {
+    transform: scale(1.05);
+    filter: saturate(1.04) contrast(1.04);
+  }
+
+  .take__scan {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background: repeating-linear-gradient(
+      to bottom,
+      rgba(0, 0, 0, 0.16) 0 1px,
+      transparent 1px 4px
+    );
+    opacity: 0.5;
+    mix-blend-mode: multiply;
+  }
+  .take__frame figcaption {
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    padding: 10px 14px;
+    font-size: 9px;
+    letter-spacing: 0.18em;
+    color: var(--ink);
+    background: rgba(8, 8, 7, 0.72);
+    opacity: 0;
+    transform: translateY(6px);
+    transition: opacity 0.45s var(--ease), transform 0.45s var(--ease);
+  }
+  .take__frame:hover figcaption {
+    opacity: 1;
+    transform: none;
+  }
+
+  .reel-foot {
+    display: flex;
+    justify-content: space-between;
+    padding: 28px var(--pad) 0;
+    font-size: 10px;
+    letter-spacing: 0.16em;
+    color: var(--gray);
+  }
+  .reel-foot a {
+    color: var(--ink);
+    text-decoration: none;
+  }
+  .reel-foot a:hover {
+    color: var(--accent);
+  }
+
+  @media (max-width: 900px) {
+    .take {
+      grid-template-columns: minmax(0, 1fr);
+      min-height: auto;
+      padding-block: clamp(40px, 9vw, 64px);
+    }
+    .take__frame {
+      order: -1;
+    }
+  }
+
+  .reel-head > span:last-child {
+    margin-right: 104px;
+  }
+</style>

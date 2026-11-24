@@ -1,0 +1,298 @@
+---
+import Base from '../../layouts/Base.astro';
+
+const steps = [
+  {
+    k: '01',
+    t: '状态',
+    d: '手表上是「你现在」：心率 76、昨夜睡了 7 小时 20 分、今天下过 0 场雨。三件事，一屏读完。',
+  },
+  {
+    k: '02',
+    t: '手势',
+    d: '手表点一下「落雨」，桌面就落一场五分钟的雨。反过来，桌面上点「暂停」，手表一起停。',
+  },
+  {
+    k: '03',
+    t: '反馈',
+    d: '雨声只从桌面出来，手表只负责正在发生的事：剩余 04:32、暂停、结束。声音的开关和屏幕的开关是两件事。',
+  },
+];
+---
+
+<Base
+  title="Product UI — 刘启征"
+  description="Interaction design: a two-device bedtime weather station, and a silent bridge. Hand-drawn UI with real handoff logic."
+>
+  <section class="ui">
+    <header class="ui-head mono">
+      <a href="/work/">← WORK</a>
+      <span>05 / 07 · PRODUCT UI · 交互设计</span>
+      <span>2 PIECES</span>
+    </header>
+
+    <div class="ui-intro">
+      <p class="mono ui-kicker">双端联动 · 桌面 1024×600 + 手表 200×200</p>
+      <h1 class="ui-title">Handoff</h1>
+      <p class="ui-sub">两件作品：一个让睡前落雨的「枕边气象站」，一个只在需要时出现的「无声桥」。</p>
+      <p class="mono ui-hint">← 拖动中间那条线 →</p>
+    </div>
+
+    <div class="compare" data-compare>
+      <figure class="compare__side">
+        <img src="/images/ui/weather.webp" alt="枕边气象站 · 桌面与手表" />
+        <figcaption class="mono">01 枕边气象站 · Bedside Weather</figcaption>
+      </figure>
+      <figure class="compare__side compare__side--top" data-compare-top>
+        <img src="/images/ui/bridge.webp" alt="无声桥 · 交互设计" />
+        <figcaption class="mono">02 无声桥 · Silent Bridge</figcaption>
+      </figure>
+      <span class="compare__line" aria-hidden="true"><i></i></span>
+    </div>
+
+    <ol class="ui-steps">
+      {steps.map((s) => (
+        <li class="ui-step">
+          <span class="mono ui-step__k">{s.k}</span>
+          <span class="ui-step__t">{s.t}</span>
+          <span class="ui-step__d">{s.d}</span>
+        </li>
+      ))}
+    </ol>
+
+    <footer class="ui-foot mono">
+      <span>FIGMA · 自绘 · 状态与声音分开设计</span>
+      <a href="/work/">ALL CATEGORIES →</a>
+    </footer>
+  </section>
+
+  <script>
+    const wrap = document.querySelector('[data-compare]');
+    if (wrap) {
+      const top = wrap.querySelector('[data-compare-top]');
+      let dragging = false;
+      const set = (clientX) => {
+        const r = wrap.getBoundingClientRect();
+        const x = Math.min(1, Math.max(0, (clientX - r.left) / r.width));
+        wrap.style.setProperty('--x', `${(x * 100).toFixed(2)}%`);
+      };
+      wrap.addEventListener('pointermove', (e) => {
+        if (!dragging) return;
+        set(e.clientX);
+      });
+      wrap.addEventListener('pointerdown', (e) => {
+        dragging = true;
+        wrap.classList.add('is-drag');
+        set(e.clientX);
+        try {
+          wrap.setPointerCapture(e.pointerId);
+        } catch {}
+      });
+      const end = () => {
+        dragging = false;
+        wrap.classList.remove('is-drag');
+      };
+      wrap.addEventListener('pointerup', end);
+      wrap.addEventListener('pointercancel', end);
+      window.addEventListener('blur', end);
+      wrap.style.setProperty('--x', '52%');
+    }
+  </script>
+</Base>
+
+<style>
+  .ui {
+    padding: 0 var(--pad) clamp(48px, 7vw, 96px);
+  }
+
+  .ui-head {
+    display: flex;
+    justify-content: space-between;
+    gap: 20px;
+    padding: 84px 0 22px;
+    font-size: 10px;
+    letter-spacing: 0.16em;
+    color: var(--gray);
+    border-bottom: 1px solid var(--line);
+  }
+  .ui-head a {
+    color: var(--ink);
+    text-decoration: none;
+  }
+  .ui-head a:hover {
+    color: var(--accent);
+  }
+
+  .ui-intro {
+    padding: clamp(32px, 4.6vw, 64px) 0 clamp(22px, 3vw, 40px);
+  }
+  .ui-kicker {
+    font-size: 10px;
+    letter-spacing: 0.16em;
+    color: var(--accent);
+    margin-bottom: 14px;
+  }
+  .ui-title {
+    font-family: var(--font-display);
+    font-size: clamp(52px, 9vw, 148px);
+    line-height: 0.9;
+    letter-spacing: -0.035em;
+    margin: 0 0 14px;
+  }
+  .ui-sub {
+    max-width: 48ch;
+    font-size: 15px;
+    line-height: 1.85;
+    color: var(--ink-2);
+  }
+  .ui-hint {
+    margin-top: 18px;
+    font-size: 9.5px;
+    letter-spacing: 0.18em;
+    color: var(--gray);
+  }
+
+  .compare {
+    --x: 52%;
+    position: relative;
+    aspect-ratio: 16 / 10;
+    overflow: hidden;
+    background: var(--bg-deep);
+    cursor: ew-resize;
+    touch-action: none;
+    user-select: none;
+  }
+  .compare__side {
+    position: absolute;
+    inset: 0;
+    margin: 0;
+  }
+  .compare__side img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center top;
+  }
+  .compare__side figcaption {
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    padding: 9px 13px;
+    font-size: 9px;
+    letter-spacing: 0.14em;
+    color: var(--ink-2);
+    background: rgba(8, 8, 7, 0.72);
+  }
+
+  .compare__side--top {
+    position: absolute;
+    inset: 0;
+    clip-path: inset(0 0 0 var(--x));
+  }
+  .compare__side--top figcaption {
+    left: auto;
+    right: 0;
+  }
+
+  .compare__line {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: var(--x);
+    width: 1px;
+    background: var(--accent);
+    box-shadow: 0 0 0 1px rgba(8, 8, 7, 0.5);
+    transition: box-shadow 0.3s var(--ease);
+  }
+  .compare__line i {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 34px;
+    height: 34px;
+    margin: -17px 0 0 -17px;
+    border: 1px solid var(--accent);
+    border-radius: 50%;
+    background: rgba(8, 8, 7, 0.55);
+    backdrop-filter: blur(2px);
+  }
+  .compare__line i::before,
+  .compare__line i::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    width: 6px;
+    height: 1px;
+    background: var(--accent);
+  }
+  .compare__line i::before {
+    left: 8px;
+  }
+  .compare__line i::after {
+    right: 8px;
+  }
+  .compare.is-drag .compare__line i {
+    box-shadow: 0 0 0 6px rgba(215, 255, 63, 0.12);
+  }
+
+  .ui-steps {
+    list-style: none;
+    margin: clamp(34px, 4.4vw, 62px) 0 0;
+    padding: 0;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: clamp(18px, 2.6vw, 40px);
+  }
+  .ui-step {
+    padding-top: 16px;
+    border-top: 1px solid var(--line);
+  }
+  .ui-step__k {
+    display: block;
+    font-size: 9.5px;
+    letter-spacing: 0.16em;
+    color: var(--accent);
+    margin-bottom: 8px;
+  }
+  .ui-step__t {
+    display: block;
+    font-family: var(--font-display);
+    font-size: clamp(20px, 2.2vw, 30px);
+    margin-bottom: 8px;
+  }
+  .ui-step__d {
+    display: block;
+    font-size: 13.5px;
+    line-height: 1.9;
+    color: var(--ink-2);
+  }
+
+  .ui-foot {
+    display: flex;
+    justify-content: space-between;
+    margin-top: clamp(34px, 4.4vw, 60px);
+    padding-top: 18px;
+    border-top: 1px solid var(--line);
+    font-size: 9.5px;
+    letter-spacing: 0.16em;
+    color: var(--gray);
+  }
+  .ui-foot a {
+    color: var(--ink);
+    text-decoration: none;
+  }
+  .ui-foot a:hover {
+    color: var(--accent);
+  }
+
+  @media (max-width: 860px) {
+    .ui-steps {
+      grid-template-columns: minmax(0, 1fr);
+    }
+  }
+
+  .ui-head > span:last-child {
+    margin-right: 104px;
+  }
+</style>
