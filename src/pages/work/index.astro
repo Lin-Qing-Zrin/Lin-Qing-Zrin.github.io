@@ -5,16 +5,21 @@ import GhostWord from '../../components/GhostWord.astro';
 import { getCollection } from 'astro:content';
 
 const works = (await getCollection('works')).sort((a, b) => a.data.order - b.data.order);
+const years = works.map((w) => w.data.year);
+const span = years.length ? `${Math.min(...years)}–${Math.max(...years)}` : '';
 ---
 
-<Base title="Work — 刘启征" description="Selected work: posters, short films and AI visual experiments.">
+<Base
+  title="Work — 刘启征"
+  description="Selected work: AI films, game worlds, VFX, product UI and the account that publishes them."
+>
   <section class="page-head wrap">
     <GhostWord text="Work" />
     <h1 class="t-display">
       <span class="line-mask"><span style="--i:0">Work</span></span>
     </h1>
-    <p class="t-meta" data-reveal style="--d:1">{works.length} selected projects · 2023–2024</p>
-    <p class="cn" data-reveal style="--d:2">共 {works.length} 件作品 · 2023–2024</p>
+    <p class="t-meta" data-reveal style="--d:1">{works.length} projects · {span}</p>
+    <p class="cn" data-reveal style="--d:2">共 {works.length} 件作品 · {span}</p>
   </section>
 
   <section class="wrap" style="padding-bottom: clamp(64px, 10vw, 160px)">

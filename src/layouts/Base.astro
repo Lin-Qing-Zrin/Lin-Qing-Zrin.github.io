@@ -375,7 +375,8 @@ const {
           const title = row.querySelector<HTMLElement>('.work-row__title');
           row.addEventListener('pointerenter', () => {
             if (row.dataset.label) setHudTarget(row.dataset.label);
-            if (row.dataset.cat && ghost) fitGhost(ghost, row.dataset.cat);
+            const ghostText = row.dataset.ghostWord || row.dataset.cat;
+            if (ghostText && ghost) fitGhost(ghost, ghostText);
           });
           // 标题跟着指针位置走：左边少、右边多，像被指针推着让路
           row.addEventListener('pointermove', (e) => {

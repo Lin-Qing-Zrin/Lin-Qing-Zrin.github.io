@@ -12,8 +12,8 @@ const works = defineCollection({
     category: z.string(),
     year: z.number(),
     cover: z.string(),
-    /** 海报用 4:5，视频/横图用 16:10，抖音竖版用 9:16 */
-    ratio: z.enum(['4:5', '16:10', '9:16']).default('4:5'),
+    /** 图片宽高比：填封面图真实的那个，预览框和详情页都按它来 */
+    ratio: z.enum(['4:5', '16:10', '9:16', '16:9', '3:4', '4:3', '1:1']).default('4:5'),
     tools: z.array(z.string()).default([]),
     role: z.string().default(''),
     summary: z.string(),
