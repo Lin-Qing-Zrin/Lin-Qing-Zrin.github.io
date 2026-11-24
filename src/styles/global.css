@@ -2017,9 +2017,9 @@ html.is-locked {
   position: absolute;
   left: 50%;
   top: 0;
-  width: min(3300px, 225vw);
-  margin-left: calc(min(3300px, 225vw) / -2);
-  padding: 92px 0 clamp(260px, 34vh, 440px);
+  width: min(2400px, 152vw);
+  margin-left: calc(min(2400px, 152vw) / -2);
+  padding: 92px 0 clamp(420px, 52vh, 700px);
   columns: 14;
   column-gap: clamp(40px, 3.8vw, 70px);
   will-change: transform;
@@ -2043,7 +2043,7 @@ html.is-locked {
   flex-direction: column;
   gap: 9px;
   width: calc(100% * var(--sc, 1));
-  margin: var(--dy, 0px) 0 clamp(88px, 8.4vw, 148px) var(--dx, 0px);
+  margin: var(--dy, 0px) 0 clamp(120px, 11vw, 210px) var(--dx, 0px);
   padding: 0;
   border: 0;
   background: none;
