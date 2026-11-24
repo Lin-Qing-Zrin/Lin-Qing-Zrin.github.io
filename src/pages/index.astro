@@ -1,12 +1,8 @@
 ---
 import Base from '../layouts/Base.astro';
-import WorkRows from '../components/WorkRows.astro';
 import Globe from '../components/Globe.astro';
 import Field from '../components/Field.astro';
-import { getCollection } from 'astro:content';
-
-const works = (await getCollection('works')).sort((a, b) => a.data.order - b.data.order);
-const featured = works.filter((w) => w.data.featured).slice(0, 4);
+import { log } from '../data/log';
 ---
 
 <Base>
@@ -73,25 +69,200 @@ const featured = works.filter((w) => w.data.featured).slice(0, 4);
 
   <section class="section wrap">
     <div class="section-head">
-      <p class="mono" data-reveal>Recent work <span class="cn cn--inline">最近的作品</span></p>
-      <a class="link-u mono" href="/work/" data-cursor="hover">All work ({works.length})</a>
+      <p class="mono" data-reveal>Log <span class="cn cn--inline">最近在做</span></p>
+      <a class="link-u mono" href="/work/" data-cursor="hover">All categories (7)</a>
     </div>
-    <WorkRows items={featured} />
+
+    <ol class="log" data-log>
+      {log.map((e, i) => (
+        <li class="log__row" data-reveal style={`--d:${i}`}>
+          <a href={e.href} data-cursor="hover">
+            <span class="mono log__date">{e.date}</span>
+            <span class="log__title">{e.title}</span>
+            <span class="log__note">{e.note}</span>
+            <span class="mono log__arrow" aria-hidden="true">↗</span>
+          </a>
+        </li>
+      ))}
+    </ol>
   </section>
 
-  <section class="section wrap">
+  <section class="section wrap" style="padding-top: clamp(40px, 5vw, 76px)">
     <hr class="rule" />
-    <div class="split">
-      <p class="mono" data-reveal>Currently <span class="cn cn--inline">现在</span></p>
-      <div data-reveal style="--d:1">
-        <p class="t-h2" style="margin-bottom:20px">
-          One pipeline, one person:<br />sketch → engine → VFX → publish.
-        </p>
-        <p class="cn" style="margin-bottom:22px">
-          正在把「草图 → 引擎 → 特效 → 发布」串成一条一个人能跑完的管线。
-        </p>
-        <a class="btn btn--solid" href="/contact/" data-cursor="hover">Say hello</a>
-      </div>
+    <div class="section-head">
+      <p class="mono" data-reveal>Pipeline <span class="cn cn--inline">一条管线</span></p>
+      <span class="mono section-head__aside" data-reveal style="--d:1">One person · four stages</span>
+    </div>
+
+    <ol class="pipe" data-reveal>
+      <li class="pipe__node">
+        <span class="mono pipe__k">01</span>
+        <span class="pipe__t">Sketch</span>
+        <span class="cn">起草：文案、分镜、构图</span>
+      </li>
+      <li class="pipe__node">
+        <span class="mono pipe__k">02</span>
+        <span class="pipe__t">Build</span>
+        <span class="cn">搭建：引擎里把场景立起来</span>
+      </li>
+      <li class="pipe__node">
+        <span class="mono pipe__k">03</span>
+        <span class="pipe__t">Light</span>
+        <span class="cn">打光与特效：材质、体积、粒子</span>
+      </li>
+      <li class="pipe__node">
+        <span class="mono pipe__k">04</span>
+        <span class="pipe__t">Ship</span>
+        <span class="cn">剪、调色、发出去，然后看数据</span>
+      </li>
+    </ol>
+
+    <div class="pipe__foot" data-reveal style="--d:1">
+      <p class="cn pipe__note">
+        这四步之间的交接是我最想省掉的部分。现在还是一个人跑完全程，所以每一环都留着我的痕迹。
+      </p>
+      <a class="btn btn--solid" href="/contact/" data-cursor="hover">Say hello</a>
     </div>
   </section>
+
+  <style>
+    .log {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      border-top: 1px solid var(--line);
+    }
+    .log__row {
+      border-bottom: 1px solid var(--line);
+    }
+    .log__row a {
+      display: grid;
+      grid-template-columns: 92px minmax(0, 1fr) minmax(0, 1.1fr) 24px;
+      align-items: baseline;
+      gap: clamp(12px, 2vw, 28px);
+      padding: clamp(14px, 1.8vw, 22px) 0;
+      text-decoration: none;
+      color: inherit;
+      transition: background 0.4s var(--ease);
+    }
+    .log__date {
+      font-size: 10px;
+      letter-spacing: 0.14em;
+      color: var(--gray);
+      transition: color 0.35s var(--ease);
+    }
+    .log__title {
+      font-family: var(--font-display);
+      font-size: clamp(20px, 2.4vw, 34px);
+      letter-spacing: -0.015em;
+      color: var(--ink);
+      transition: transform 0.5s var(--ease);
+    }
+    .log__note {
+      font-size: 13px;
+      line-height: 1.7;
+      color: var(--ink-2);
+      transition: color 0.35s var(--ease);
+    }
+    .log__arrow {
+      font-size: 13px;
+      color: var(--gray);
+      text-align: right;
+      transition: color 0.35s var(--ease), transform 0.45s var(--ease);
+    }
+    @media (hover: hover) {
+      .log__row a:hover .log__title {
+        transform: translateX(10px);
+      }
+      .log__row a:hover .log__date,
+      .log__row a:hover .log__arrow {
+        color: var(--accent);
+      }
+      .log__row a:hover .log__arrow {
+        transform: translate(3px, -3px);
+      }
+    }
+
+    .pipe {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: clamp(14px, 2.4vw, 40px);
+    }
+    .pipe__node {
+      position: relative;
+      padding-top: 16px;
+      border-top: 1px solid var(--line);
+    }
+    .pipe__node::after {
+      content: '→';
+      position: absolute;
+      top: -11px;
+      right: calc(-0.5 * clamp(14px, 2.4vw, 40px) - 9px);
+      font-size: 14px;
+      color: var(--accent);
+      background: var(--bg);
+      padding: 0 4px;
+    }
+    .pipe__node:last-child::after {
+      content: none;
+    }
+    .pipe__k {
+      display: block;
+      font-size: 9px;
+      letter-spacing: 0.16em;
+      color: var(--accent);
+      margin-bottom: 10px;
+    }
+    .pipe__t {
+      display: block;
+      font-family: var(--font-display);
+      font-size: clamp(22px, 2.6vw, 40px);
+      letter-spacing: -0.02em;
+      margin-bottom: 8px;
+    }
+    .pipe__node .cn {
+      display: block;
+      font-size: 12.5px;
+      line-height: 1.8;
+      color: var(--gray);
+    }
+
+    .pipe__foot {
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      gap: 28px;
+      margin-top: clamp(26px, 3.4vw, 44px);
+      padding-top: clamp(18px, 2.4vw, 28px);
+      border-top: 1px solid var(--line);
+    }
+    .pipe__note {
+      max-width: 46ch;
+      margin: 0;
+    }
+
+    @media (max-width: 860px) {
+      .log__row a {
+        grid-template-columns: 72px minmax(0, 1fr) 20px;
+        row-gap: 6px;
+      }
+      .log__note {
+        grid-column: 2 / -1;
+      }
+      .pipe {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        row-gap: clamp(20px, 4vw, 32px);
+      }
+      .pipe__node:nth-child(2)::after {
+        content: none;
+      }
+      .pipe__foot {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+    }
+  </style>
 </Base>
