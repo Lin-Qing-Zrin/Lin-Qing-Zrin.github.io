@@ -1,6 +1,7 @@
 ---
 import Base from '../layouts/Base.astro';
 import WorkRows from '../components/WorkRows.astro';
+import Globe from '../components/Globe.astro';
 import { getCollection } from 'astro:content';
 
 const works = (await getCollection('works')).sort((a, b) => a.data.order - b.data.order);
@@ -8,33 +9,43 @@ const featured = works.filter((w) => w.data.featured).slice(0, 4);
 ---
 
 <Base>
-  <section class="hero wrap">
-    <p class="t-eyebrow hero__eyebrow" data-reveal>Student · Digital Media · Suzhou</p>
+  <section class="hero--instrument wrap">
+    <div class="hero__grid">
+      <div>
+        <div class="hero__top" data-reveal>
+          <p class="mono">Student — Digital Media — Suzhou</p>
+        </div>
 
-    <h1 class="t-display">
-      <span class="line-mask"><span style="--i:0">刘启征—</span></span>
-    </h1>
+        <h1 class="t-display">
+          <span class="line-mask"><span style="--i:0">刘启征</span></span>
+        </h1>
 
-    <div class="hero__lede">
-      <p class="lede" data-reveal style="--d:1">
-        I make posters, short films and AI-driven visuals. Currently studying Digital
-        Media Technology, learning in public, building a pipeline from idea to final
-        frame.
-      </p>
-      <div data-reveal style="--d:2">
-        <p class="lede" style="margin-bottom:28px">
-          Working across design and code gives me an unusual place in the process —
-          I care about the <em>rhythm</em> of a frame as much as the system behind it.
+        <p class="hero__lede-s" data-reveal style="--d:1">
+          Posters, short films and AI-driven visuals. Studying Digital Media Technology —
+          <em>building a pipeline from idea to final frame.</em>
         </p>
-        <a class="btn" href="/about/" data-cursor="hover">About me</a>
       </div>
+
+      <div class="hero__globe" data-reveal style="--d:2">
+        <Globe />
+      </div>
+    </div>
+
+    <div class="hero__bottom" data-reveal>
+      <dl class="data-row">
+        <div><dt>Local</dt><dd data-clock>--:--:--</dd></div>
+        <div><dt>Zone</dt><dd>UTC+08:00</dd></div>
+        <div><dt>Lat</dt><dd>31.2989° N</dd></div>
+        <div><dt>Lon</dt><dd>120.5853° E</dd></div>
+      </dl>
+      <span class="tc">REC <span class="tc__num" data-tc>00:00:00:00</span></span>
     </div>
   </section>
 
   <section class="section wrap">
     <div class="section-head">
-      <p class="t-eyebrow" data-reveal>Recent work</p>
-      <a class="link-u t-meta" href="/work/" data-cursor="hover">All work ({works.length})</a>
+      <p class="mono" data-reveal>Recent work</p>
+      <a class="link-u mono" href="/work/" data-cursor="hover">All work ({works.length})</a>
     </div>
     <WorkRows items={featured} />
   </section>
@@ -42,7 +53,7 @@ const featured = works.filter((w) => w.data.featured).slice(0, 4);
   <section class="section wrap">
     <hr class="rule" />
     <div class="split">
-      <p class="t-eyebrow" data-reveal>Currently</p>
+      <p class="mono" data-reveal>Currently</p>
       <div data-reveal style="--d:1">
         <p class="t-h2" style="margin-bottom:20px">
           Open to internships, collaborations<br />and commissioned posters.

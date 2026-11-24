@@ -1,6 +1,7 @@
 # Portfolio — Astro skeleton
 
-一个按「巨型字体 + 作品行列表 + 光标跟随预览」风格搭的个人作品集骨架。
+暗场「仪器」风格的个人作品集：近黑底色 + 巨型字 + 实时数据读数（本地时间 / 经纬度 / 24fps 时间码）
++ 转动的线框地球（苏州打点）+ 胶片齿孔边 + 作品行列表（hover 光标跟随预览）。
 静态站，构建产物是纯 HTML/CSS/JS，可以直接丢到 GitHub Pages。
 
 ---
@@ -19,7 +20,9 @@ portfolio/
 │  │  ├─ Header.astro        # 顶栏（mix-blend-mode: difference）
 │  │  ├─ Footer.astro        # 页脚「Let's work together.」
 │  │  ├─ Cursor.astro        # 自定义光标
+│  │  ├─ Globe.astro         # 线框地球（canvas 正交投影，可拖拽）
 │  │  └─ WorkRows.astro      # 作品行列表 + 光标跟随预览
+│  ├─ data/land.json         # 地球用的陆地轮廓（world-atlas land-110m 解码后，65KB）
 │  ├─ content/
 │  │  ├─ works/*.md          # ← 你的作品，一篇 md = 一个作品
 │  ├─ content.config.ts      # 作品的字段定义（schema）
@@ -107,13 +110,32 @@ git push -u origin main
 - [x] `src/pages/contact.astro` + `src/components/Footer.astro` — 邮箱 Linqingzhu0420@gmail.com、抖音 39490590044、GitHub Lin-Qing-Zrin
 - [x] `astro.config.mjs` — `site: https://lin-qing-zrin.github.io`（仓库名必须是 `Lin-Qing-Zrin.github.io`）
 - [x] `public/images/og.png` — 分享卡片图（已用中文名重做）
-- [ ] `src/styles/global.css` 的 `:root` — 想换强调色改 `--blue`（现在只在 hover 用蓝色）
+- [x] 配色 — 暗场 `--bg #0c0c0c` + 一个强调色 `--accent #d7ff3f`（荧光黄绿），红点 `--pin #ff3b1f`
+- [ ] `src/components/Globe.astro` — 想把红点换到别的城市，改第 5 行的 `pin = { lon, lat }`
 - [ ] **4 个作品仍是占位图**（`poster-01.svg` / `douyin.svg` / `ai-visual.svg` / `short-film.svg`），换成真图后才算完成
 
 ### 时钟
 
 页脚 "Local time" 固定按 **Asia/Shanghai** 显示（`src/layouts/Base.astro` 的 `initClock`），
 访客在哪个国家看到的都是北京时间，不会变成他自己的。
+
+### 地球
+
+`src/components/Globe.astro`，纯 canvas，没有 three.js / 没有依赖：
+
+- 投影是正交投影，`state.lon0 / lat0` 是视角中心；静止时自动自转约 4.5°/s。
+- 鼠标能在球上拖动（`pointerdown/move/up`），松手有惯性；hover 时暂停自转。
+- 陆地数据在 `src/data/land.json`（`world-atlas` 的 `land-110m` 解码来的经纬环，126 条环）。
+- **只描海岸线，不填充陆地**：正交投影下填充多边形会在球缘用一条直弦闭合，
+  出现横切整个球面的色带；线框反而更干净，也更符合这套「仪器」语言。
+  要改颜色就改 `drawLand()` 里的 `strokeStyle` 和 `draw()` 里的 `createRadialGradient` 三段色。
+- 换了城市要把 `Globe.astro` 顶部的 `pin` 和 `src/pages/index.astro` 里的
+  `Lat` / `Lon` 读数一起改，三处对不上会显得假。
+
+### 时间码
+
+`Base.astro` 的 `initTimecode()` 把 24fps 的 `HH:MM:SS:FF` 写进所有 `[data-tc]`。
+想在第几屏出现，给那个元素加 `data-tc` 就行；`prefers-reduced-motion` 下固定显示 `00:00:00:00`。
 
 ### 预览框比例
 
@@ -124,15 +146,17 @@ git push -u origin main
 ## 6. 设计约定（别破坏它）
 
 - 一屏只有一个巨型标题；正文最大 62ch。
-- 只用一个强调色（现在是 `#1a3cff` 蓝），其余全是黑白灰。
+- 底色是近黑 `--bg #0c0c0c`，只有**一个**强调色 `--accent #d7ff3f` + 一个信号红 `--pin #ff3b1f`。
+- 数字/读数/元信息一律用等宽字体（`.mono`、`--font-mono`，大写 + 0.14em 字距）。
 - 动效只动 `transform / opacity`，时长 150–700ms，缓动统一 `var(--ease)`。
 - 所有动效都必须在 `prefers-reduced-motion: reduce` 下失效（已写好）。
 - 作品列表是**行**，不是卡片网格；缩略图只通过光标跟随出现（移动端才显示行内缩略图）。
-- 彩色作品放在中性底色上即可，**不要把页面底色改成彩色**。
+- 彩色作品直接放在暗底上，**不要把页面底色改成彩色**，也不要在作品周围加光晕。
+- 花活只允许三处：左上数据读数、地球、REC 时间码。别再加第四个。
 
 ## 7. 字体
 
-目前用 Google Fonts 的 Inter + Inter Tight（`Base.astro` 里的 `<link>`）。
+目前用 Google Fonts 的 Inter + Inter Tight（正文/标题）+ JetBrains Mono（读数/编号）（`Base.astro` 里的 `<link>`）。
 国内访问 Google Fonts 可能慢，换成自托管：
 
 1. 从 https://fontsource.org 或 https://www.fontshare.com 下载 woff2。

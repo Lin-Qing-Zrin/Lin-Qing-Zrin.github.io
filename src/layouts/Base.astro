@@ -23,7 +23,7 @@ const {
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>{title}</title>
     <meta name="description" content={description} />
-    <meta name="theme-color" content="#f2f0eb" />
+    <meta name="theme-color" content="#0c0c0c" />
 
     <meta property="og:type" content="website" />
     <meta property="og:title" content={title} />
@@ -37,7 +37,7 @@ const {
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Inter+Tight:wght@400;500;600&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Inter+Tight:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap"
       rel="stylesheet"
     />
 
@@ -47,6 +47,9 @@ const {
     <div class="preloader" data-preloader>
       <span class="preloader__word" data-preloader-word>Hello</span>
     </div>
+
+    <div class="film-edge film-edge--l" aria-hidden="true"></div>
+    <div class="film-edge film-edge--r" aria-hidden="true"></div>
 
     <Cursor />
     <Header />
@@ -298,12 +301,39 @@ const {
         }, 900);
       }
 
+      /* ------------------------------------------------------------
+         24fps 时间码（片边 REC 读数）
+         ------------------------------------------------------------ */
+      let tcRaf = 0;
+      const tcStart = performance.now();
+      function initTimecode() {
+        cancelAnimationFrame(tcRaf);
+        const nodes = document.querySelectorAll<HTMLElement>('[data-tc]');
+        if (!nodes.length) return;
+        const pad = (n: number) => String(n).padStart(2, '0');
+        const run = () => {
+          const s = (performance.now() - tcStart) / 1000;
+          const frame = Math.floor((s % 1) * 24);
+          const text = `${pad(Math.floor(s / 3600))}:${pad(Math.floor(s / 60) % 60)}:${pad(
+            Math.floor(s) % 60
+          )}:${pad(frame)}`;
+          nodes.forEach((n) => (n.textContent = text));
+          tcRaf = requestAnimationFrame(run);
+        };
+        if (reduceMotion) {
+          nodes.forEach((n) => (n.textContent = '00:00:00:00'));
+          return;
+        }
+        run();
+      }
+
       function boot() {
         initPreloader();
         initLenis();
         initHero();
         initReveal();
         initClock();
+        initTimecode();
         initPreview();
         initCursor();
       }
