@@ -128,6 +128,9 @@ const {
       );
 
       // 全站唯一的渲染循环
+      let lastScroll = window.scrollY;
+      let vel = 0;
+
       function frame() {
         if (cursorEl) {
           cx += (pointer.x - cx) * 0.15;
@@ -166,6 +169,14 @@ const {
           }
         }
         if (tick % 6 === 0) updateHud();
+
+        // 滚动速度 → CSS 变量，让颗粒和齿孔跟着"速度"呼吸
+        const sy = window.scrollY;
+        const dv = Math.min(1, Math.abs(sy - lastScroll) / 90);
+        vel = vel * 0.82 + dv * 0.18;
+        lastScroll = sy;
+        document.documentElement.style.setProperty('--vel', vel.toFixed(3));
+
         tick += 1;
 
         requestAnimationFrame(frame);

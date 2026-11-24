@@ -176,11 +176,6 @@ import { practice } from '../data/practice';
         if (p < 0.004) {
           fly.style.opacity = '0';
           nameEl.style.opacity = '';
-          globe.style.transform = '';
-          globe.style.opacity = '';
-          if (top) top.style.opacity = '';
-          if (lede) lede.style.opacity = '';
-          if (bottom) bottom.style.opacity = '';
           brand.style.opacity = '';
         } else {
           const br = brand.getBoundingClientRect();
@@ -191,14 +186,10 @@ import { practice } from '../data/practice';
           const endViewY = br.top + br.height / 2 - (fly.offsetHeight * sc) / 2;
           const y = startViewY + (endViewY - startViewY) * p;
           fly.style.transform = `translate3d(${x.toFixed(1)}px, ${y.toFixed(1)}px, 0) scale(${sc.toFixed(4)})`;
-          fly.style.opacity = String(p > 0.9 ? clamp01(1 - (p - 0.9) / 0.1) : clamp01(p * 5));
+          fly.style.opacity = String(p > 0.9 ? clamp01(1 - (p - 0.9) / 0.1) : clamp01((p - 0.07) / 0.07));
 
-          nameEl.style.opacity = String(clamp01(1 - p * 7));
-          globe.style.transform = `translate3d(${(gdx * p * 0.3).toFixed(1)}px, ${(gdy * p * 0.3).toFixed(1)}px, 0) scale(${(1 + (globeScale - 1) * p).toFixed(3)})`;
-          globe.style.opacity = String(clamp01(1 - p * 1.25));
-          if (top) top.style.opacity = String(clamp01(1 - p * 2.4));
-          if (lede) lede.style.opacity = String(clamp01(1 - p * 1.9));
-          if (bottom) bottom.style.opacity = String(clamp01(1 - p * 1.5));
+          // 只有名字离开原位；其余内容照常随页面滚走，不做集体淡出（否则中间会留一大片空场）
+          nameEl.style.opacity = String(clamp01(1 - p / 0.1));
           brand.style.opacity = String(clamp01((p - 0.9) / 0.1));
         }
 
@@ -208,7 +199,7 @@ import { practice } from '../data/practice';
 
       const onScroll = () => {
         const h = hero.offsetHeight || window.innerHeight;
-        const next = clamp01(window.scrollY / (h * 0.62));
+        const next = clamp01(window.scrollY / (h * 0.42));
         if (next === target && raf) return;
         target = next;
         if (!raf) raf = requestAnimationFrame(apply);
@@ -229,6 +220,49 @@ import { practice } from '../data/practice';
 
     document.addEventListener('astro:page-load', bindHeroMorph);
     bindHeroMorph();
+
+    /* PRACTICE 悬停：光标右侧浮现该方向的一张代表图 */
+    function bindPracticePeek() {
+      const list = document.querySelector<HTMLElement>('[data-prac]');
+      const peek = document.querySelector<HTMLElement>('[data-prac-peek]');
+      const img = peek?.querySelector('img');
+      if (!list || !peek || !img) return;
+      const W = window as Window & { __pracPeek?: boolean };
+      if (W.__pracPeek) return;
+      W.__pracPeek = true;
+      if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+      if (window.matchMedia('(hover: none)').matches) return;
+
+      let tx = window.innerWidth * 0.62;
+      let ty = window.innerHeight * 0.4;
+      let cx = tx;
+      let cy = ty;
+
+      list.addEventListener('pointermove', (e) => {
+        const ev = e as PointerEvent;
+        tx = ev.clientX + 34;
+        ty = ev.clientY - peek.offsetHeight * 0.5;
+      });
+      list.querySelectorAll<HTMLElement>('[data-peek]').forEach((a) => {
+        a.addEventListener('pointerenter', () => {
+          const src = a.dataset.peek;
+          if (src && img.getAttribute('src') !== src) img.src = src;
+          peek.classList.add('is-on');
+        });
+      });
+      list.addEventListener('pointerleave', () => peek.classList.remove('is-on'));
+
+      const loop = () => {
+        cx += (tx - cx) * 0.16;
+        cy += (ty - cy) * 0.16;
+        peek.style.transform = `translate3d(${cx.toFixed(1)}px, ${cy.toFixed(1)}px, 0)`;
+        requestAnimationFrame(loop);
+      };
+      loop();
+    }
+
+    document.addEventListener('astro:page-load', bindPracticePeek);
+    bindPracticePeek();
   </script>
 
   <section class="section wrap">
@@ -240,7 +274,7 @@ import { practice } from '../data/practice';
     <ol class="prac" data-prac>
       {practice.map((e, i) => (
         <li class="prac__row" data-reveal style={`--d:${i}`}>
-          <a href={e.href} data-cursor="hover">
+          <a href={e.href} data-cursor="hover" data-peek={e.img}>
             <span class="mono prac__no">{e.no}</span>
             <span class="prac__en">{e.en}</span>
             <span class="prac__cn">{e.cn}</span>
@@ -250,6 +284,8 @@ import { practice } from '../data/practice';
         </li>
       ))}
     </ol>
+
+    <div class="prac-peek" data-prac-peek aria-hidden="true"><img alt="" /></div>
   </section>
 
   <section class="section wrap" style="padding-top: clamp(40px, 5vw, 76px)">

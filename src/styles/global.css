@@ -2207,14 +2207,50 @@ html.is-locked {
     animation: none;
   }
 }
-/* 首屏钉住，后面的内容滑上来盖住它（拆解后的收尾） */
+/* 首屏正常滚动；拆解动画在开头 40% 屏内完成，不钉住（钉住会留一屏空白） */
 .hero--instrument {
-  position: sticky;
-  top: 0;
+  position: relative;
   z-index: 0;
 }
 .section {
   position: relative;
   z-index: 2;
   background: var(--bg);
+}
+/* PRACTICE 悬停浮现的代表图 */
+.prac-peek {
+  position: fixed;
+  left: 0;
+  top: 0;
+  z-index: 5;
+  width: min(24vw, 300px);
+  aspect-ratio: 4 / 3;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.28s var(--ease);
+  will-change: transform;
+  background: var(--bg-deep);
+  outline: 1px solid var(--line);
+}
+.prac-peek.is-on {
+  opacity: 1;
+}
+.prac-peek img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+@media (hover: none) {
+  .prac-peek {
+    display: none;
+  }
+}
+
+/* 滚动速度让颗粒与齿孔呼吸 */
+.grain {
+  opacity: calc(0.05 + var(--vel, 0) * 0.06);
+}
+.film-edge__fill {
+  filter: brightness(calc(1 + var(--vel, 0) * 0.9));
 }
