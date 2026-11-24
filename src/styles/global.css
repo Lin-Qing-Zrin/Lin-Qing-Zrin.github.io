@@ -13,6 +13,9 @@
 
   --font-display: "Inter Tight", "Inter", "Noto Sans SC", -apple-system, "Segoe UI",
     "Helvetica Neue", Arial, "PingFang SC", "Microsoft YaHei", sans-serif;
+  /* 大标题用的两把"艺术字"：宋体黑用于中文名字（描边），Archivo Black 用于英文栏目 */
+  --font-serif: "Noto Serif SC", "Songti SC", "SimSun", serif;
+  --font-black: "Archivo Black", "Inter Tight", "Inter", "Noto Sans SC", sans-serif;
   --font-body: "Inter", "Noto Sans SC", -apple-system, "Segoe UI", "Helvetica Neue", Arial,
     "PingFang SC", "Microsoft YaHei", sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, "SF Mono", Consolas, "Courier New",
@@ -1324,6 +1327,30 @@ html.no-preloader .preloader {
   }
 }
 
+/* ============================================================
+   艺术字：中文名做空心描边（宋体黑），英文栏目做几何粗黑
+   ============================================================ */
+.hero__name {
+  font-family: var(--font-serif);
+  font-weight: 900;
+  letter-spacing: 0.01em;
+  line-height: 0.9;
+  color: transparent;
+  -webkit-text-stroke: clamp(2.2px, 0.23vw, 3.4px) var(--ink);
+  background-image: repeating-linear-gradient(
+    92deg,
+    rgba(215, 255, 63, 0.2) 0 2px,
+    transparent 2px 9px
+  );
+  -webkit-background-clip: text;
+  background-clip: text;
+}
+
+/* 描边字不叠彩色重影，只保留抬起与轻微虚化 */
+.hero__name .fx-ch {
+  text-shadow: none;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .grain,
   .ticker__track {
@@ -1574,7 +1601,7 @@ html.no-preloader .preloader {
   min-width: 0;
 }
 .cat-row__en {
-  font-family: var(--font-display);
+  font-family: var(--font-black);
   font-weight: 500;
   font-size: clamp(28px, 4.4vw, 62px);
   line-height: 1;
@@ -2273,4 +2300,37 @@ html.is-locked {
 
 .about-grid {
   padding-bottom: clamp(20px, 3vw, 44px);
+}
+
+/* 英文栏目标题统一切成 Archivo Black */
+.prac__en,
+.cat-row__en,
+.tk-h1 {
+  font-family: var(--font-black);
+  font-weight: 400;
+  letter-spacing: -0.035em;
+}
+
+/* 六个分类页的大标题同样是"栏目"（film 页每部片的标题保持宋黑衬线感） */
+.lv-title,
+.vf-title,
+.ui-title,
+.id-title,
+.ps-title {
+  font-family: var(--font-black);
+  font-weight: 400;
+  letter-spacing: -0.035em;
+  line-height: 0.94;
+}
+.take__title {
+  font-family: var(--font-serif);
+  font-weight: 900;
+  letter-spacing: 0.01em;
+}
+
+/* 目录页的 Work 也归入"栏目"这一层 */
+.page-head .t-h1 {
+  font-family: var(--font-black);
+  font-weight: 400;
+  letter-spacing: -0.035em;
 }
