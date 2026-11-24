@@ -1,11 +1,23 @@
 ---
 import Base from '../layouts/Base.astro';
 import GhostWord from '../components/GhostWord.astro';
+
+// 工具墙：没有真实 logo 文件，用「色块 + 字母/缩写」画，标签在下面
+const tools = [
+  { key: 'ue', label: 'Unreal Engine 5', mark: 'UE', bg: '#1c1c22', fg: '#f2f0eb' },
+  { key: 'blender', label: 'Blender', mark: 'B', bg: '#e87d0d', fg: '#141311' },
+  { key: 'pr', label: 'Premiere Pro', mark: 'Pr', bg: '#2b0a3d', fg: '#c39bff' },
+  { key: 'ae', label: 'After Effects', mark: 'Ae', bg: '#16003a', fg: '#c8a8ff' },
+  { key: 'figma', label: 'Figma', mark: 'F', bg: '#1c1c22', fg: '#f2f0eb' },
+  { key: 'comfy', label: 'ComfyUI', mark: 'Cq', bg: '#0f2a1d', fg: '#8ef0b4' },
+  { key: 'ps', label: 'Photoshop', mark: 'Ps', bg: '#001e36', fg: '#5aa9ff' },
+  { key: 'code', label: 'Cursor · Vibe coding', mark: '↯', bg: '#1c1c22', fg: '#d7ff3f' },
+];
 ---
 
 <Base
   title="About — 刘启征"
-  description="Digital Media Technology student in Suzhou — short films, game levels, VFX, and the account that publishes them."
+  description="Digital Media Technology student in Suzhou — video work, game levels, VFX, and the account that publishes them."
 >
   <section class="page-head wrap">
     <GhostWord text="About" />
@@ -17,42 +29,38 @@ import GhostWord from '../components/GhostWord.astro';
   <section class="wrap about-grid">
     <div class="prose" data-reveal>
       <p class="lede">
-        I'm 刘启征 (Lin), a Digital Media Technology student at Suzhou Chien-Shiung
-        Institute of Technology. I make short films, build Wuxia levels in Unreal Engine
-        5, and do 3D and VFX in Blender.
+        I'm 刘启征 (Lin), a Digital Media Technology student in Suzhou. I make video work,
+        build Wuxia levels in Unreal Engine 5, and do 3D and VFX in Blender.
       </p>
       <p class="cn">
-        我是刘启征，苏州健雄职业技术学院数字媒体技术专业。做短片、在虚幻 5 里搭武侠场景、
-        用 Blender 做三维和特效。
+        我是刘启征，数字媒体技术专业在读。做视频创作、在虚幻 5 里搭武侠场景、用 Blender
+        做三维和特效。
       </p>
 
       <p>
-        What I like is the part most people skip: blocking a shot, lighting a set, cutting
-        to the beat, grading until the whole thing holds together. A frame is mostly a
-        decision about what to leave out.
+        Most things I want to see don't exist yet, so I build them: block the shot in
+        engine, light it, cut it against the music, then publish it and watch what happens.
+        When the tool I need is missing, I code it — small scripts, web toys, whatever
+        closes the gap. That's the vibe-coding part, and it's usually faster than waiting
+        for a plugin.
       </p>
       <p class="cn">
-        我喜欢的是别人容易跳过的部分：摆机位、布光、按节拍剪、调色直到整段立住。
-        一帧里头，大部分功夫是「决定留下什么、扔掉什么」。
+        我想看的东西大多还不存在，所以自己做：在引擎里摆机位、布光、卡着音乐剪，发出去看
+        反应。缺工具就自己写——小脚本、网页小玩具，能补上那个缺口就行。所谓 vibe coding
+        就是这么回事，通常比等插件快。
       </p>
 
       <p>
-        Right now three things run at once: a short film about 王阳明, a Wuxia action level
-        in Unreal Engine 5, and an account where I publish whatever comes out. Finishing
-        one thing at a time is the hard part.
+        Still in progress: one Wuxia level, a video account that ships weekly, and a folder
+        of shaders that don't compile yet. The list keeps getting longer, which is the
+        point.
+      </p>
+      <p class="cn">
+        还在做的：一关武侠关卡、一个每周更新的视频账号、一堆还没编译通过的着色器。
+        清单只会越来越长——这本来就是要的样子。
       </p>
 
       <h3>What I work with</h3>
-      <p>
-        Unreal Engine 5 · Blender &amp; particle VFX · Premiere / DaVinci Resolve · Figma ·
-        HTML / CSS / JS · ComfyUI · writing &amp; editing.
-      </p>
-
-      <h3>Now</h3>
-      <p>
-        Building one pipeline from first sketch to release, and writing down what breaks
-        along the way.
-      </p>
     </div>
 
     <aside class="about-aside" data-reveal style="--d:1">
@@ -62,15 +70,11 @@ import GhostWord from '../components/GhostWord.astro';
       </div>
       <div>
         <h4>Studying</h4>
-        <p>Digital Media Technology<br />Suzhou Chien-Shiung Institute of Technology</p>
+        <p>Digital Media Technology</p>
       </div>
       <div>
         <h4>Direction</h4>
-        <p>AIGC · Game engine · VFX · Self-media</p>
-      </div>
-      <div>
-        <h4>Tools</h4>
-        <p>UE5 · Blender · Premiere · Figma · ComfyUI</p>
+        <p>Video · Game engine · VFX · Self-media</p>
       </div>
       <div>
         <h4>Contact</h4>
@@ -82,4 +86,81 @@ import GhostWord from '../components/GhostWord.astro';
       </div>
     </aside>
   </section>
+
+  <section class="wrap about-tools" data-reveal>
+    <ul class="tool-grid">
+      {tools.map((t) => (
+        <li class="tool" style={`--tbg:${t.bg};--tfg:${t.fg}`}>
+          <span class="tool__mark" aria-hidden="true">{t.mark}</span>
+          <span class="tool__label">{t.label}</span>
+        </li>
+      ))}
+    </ul>
+  </section>
+
+  <section class="wrap about-now">
+    <div class="split">
+      <p class="mono">NOW 现在</p>
+      <p class="t-h3">
+        Building one pipeline from first sketch to release, and writing down what breaks
+        along the way.
+      </p>
+    </div>
+  </section>
 </Base>
+
+<style>
+  .about-tools {
+    padding-block: clamp(4px, 1vw, 14px) clamp(56px, 8vw, 110px);
+  }
+  .tool-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: clamp(12px, 1.8vw, 26px);
+    list-style: none;
+    max-width: 1100px;
+  }
+  .tool {
+    display: grid;
+    justify-items: center;
+    gap: 14px;
+    padding: clamp(22px, 2.4vw, 34px) 12px clamp(16px, 1.8vw, 22px);
+    outline: 1px solid var(--line);
+    transition:
+      outline-color 0.35s var(--ease),
+      transform 0.35s var(--ease);
+  }
+  .tool__mark {
+    width: clamp(56px, 5vw, 84px);
+    aspect-ratio: 1;
+    display: grid;
+    place-items: center;
+    font-family: var(--font-mono);
+    font-size: clamp(19px, 1.7vw, 26px);
+    font-weight: 500;
+    letter-spacing: 0.04em;
+    background: var(--tbg);
+    color: var(--tfg);
+    border-radius: 18px;
+  }
+  .tool__label {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    color: var(--gray);
+    text-align: center;
+    line-height: 1.35;
+  }
+  .tool:hover {
+    outline-color: var(--accent);
+    transform: translateY(-3px);
+  }
+  .about-now {
+    padding-bottom: clamp(80px, 12vw, 180px);
+  }
+  @media (max-width: 780px) {
+    .tool-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+</style>

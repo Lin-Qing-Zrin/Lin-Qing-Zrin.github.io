@@ -247,6 +247,8 @@ import { practice } from '../data/practice';
         a.addEventListener('pointerenter', () => {
           const src = a.dataset.peek;
           if (src && img.getAttribute('src') !== src) img.src = src;
+          const label = peek.querySelector<HTMLElement>('[data-peek-label]');
+          if (label) label.textContent = a.dataset.peekLabel ?? '';
           peek.classList.add('is-on');
         });
       });
@@ -274,7 +276,7 @@ import { practice } from '../data/practice';
     <ol class="prac" data-prac>
       {practice.map((e, i) => (
         <li class="prac__row" data-reveal style={`--d:${i}`}>
-          <a href={e.href} data-cursor="hover" data-peek={e.img}>
+          <a href={e.href} data-cursor="hover" data-peek={e.img} data-peek-label={e.cn}>
             <span class="mono prac__no">{e.no}</span>
             <span class="prac__en">{e.en}</span>
             <span class="prac__cn">{e.cn}</span>
@@ -285,7 +287,11 @@ import { practice } from '../data/practice';
       ))}
     </ol>
 
-    <div class="prac-peek" data-prac-peek aria-hidden="true"><img alt="" /></div>
+    <div class="prac-peek" data-prac-peek aria-hidden="true">
+      <img alt="" />
+      <span class="prac-peek__badge">View<span class="prac-peek__arrow">↗</span></span>
+      <span class="prac-peek__label mono" data-peek-label></span>
+    </div>
   </section>
 
   <section class="section wrap" style="padding-top: clamp(40px, 5vw, 76px)">
@@ -397,9 +403,10 @@ import { practice } from '../data/practice';
       transition: color 0.35s var(--ease), transform 0.45s var(--ease);
     }
     @media (hover: hover) {
+      /* 悬停时该行标题退成灰（和参考站一样：让位给浮出的预览卡） */
       .prac__row a:hover .prac__en {
-        transform: translateX(12px);
-        color: var(--accent);
+        transform: translateX(6px);
+        color: var(--gray);
       }
       .prac__row a:hover .prac__no,
       .prac__row a:hover .prac__arrow {
