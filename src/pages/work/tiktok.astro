@@ -10,7 +10,6 @@ type Item = {
   src: string;
   w: number;
   h: number;
-  note?: string;
 };
 
 const items = raw as Item[];
@@ -41,7 +40,7 @@ const ratio = (it: Item) => (it.w / it.h).toFixed(4);
     </h1>
     <p class="t-meta" data-reveal style="--d:1">抖音帐号 · {series.length} 个系列 · {total} 条</p>
     <p class="cn" data-reveal style="--d:2">
-      一个人跑完选题、出图、剪辑和发布。平铺看图，鼠标左右移动可以推拉，滚轮缩放，点开看大图和说明。
+      一个人跑完选题、出图、剪辑和发布。下面是完整片单，点任意一条看原图。
     </p>
   </section>
 
@@ -59,33 +58,12 @@ const ratio = (it: Item) => (it.w / it.h).toFixed(4);
           ))
         }
       </div>
-      <div class="viewbar mono">
-        <button class="vbtn is-active" data-view="grid" type="button">Grid 平铺</button>
-        <button class="vbtn" data-view="list" type="button">List 列表</button>
-      </div>
+      <a class="vbtn vbtn--link" href="/work/tiktok/gallery/" data-cursor="hover">
+        Gallery 平铺 →
+      </a>
     </div>
 
-    <section class="gal" data-gal>
-      <div class="gal__track" data-gal-track>
-        {
-          items.map((it, i) => (
-            <button
-              class="gal__tile"
-              type="button"
-              data-i={i}
-              data-serie={it.serieSlug}
-              style={`--r:${ratio(it)}`}
-              aria-label={it.title}
-            >
-              <img src={it.src} alt={it.title} loading="lazy" decoding="async" />
-              <span class="gal__cap">{it.title}</span>
-            </button>
-          ))
-        }
-      </div>
-    </section>
-
-    <div class="tk-list is-off" data-tk-list>
+    <div class="tk-list" data-tk-list>
       {
         items.map((it, i) => (
           <button
@@ -119,7 +97,7 @@ const ratio = (it: Item) => (it.w / it.h).toFixed(4);
     <figure class="viewer__stage">
       <div class="viewer__frame">
         <img data-viewer-img alt="" decoding="async" />
-        <figcaption class="viewer__note mono" data-viewer-note>—</figcaption>
+        <figcaption class="viewer__note" data-viewer-note>—</figcaption>
       </div>
     </figure>
     <div class="viewer__foot mono">
@@ -131,8 +109,6 @@ const ratio = (it: Item) => (it.w / it.h).toFixed(4);
 
   <script define:vars={{ items }}>
     function initTiktok() {
-      const gal = document.querySelector('[data-gal]');
-      const track = document.querySelector('[data-gal-track]');
       const list = document.querySelector('[data-tk-list]');
       const viewer = document.querySelector('[data-viewer]');
       const vImg = document.querySelector('[data-viewer-img]');
@@ -140,12 +116,10 @@ const ratio = (it: Item) => (it.w / it.h).toFixed(4);
       const vMeta = document.querySelector('[data-viewer-meta]');
       const vNote = document.querySelector('[data-viewer-note]');
       const vCount = document.querySelector('[data-viewer-count]');
-      if (!gal || !track || !list || !viewer) return;
+      if (!list || !viewer) return;
 
-      const tiles = Array.from(track.querySelectorAll('.gal__tile'));
       const rows = Array.from(list.querySelectorAll('.tk-row'));
       const chips = Array.from(document.querySelectorAll('[data-chip]'));
-      const vbtns = Array.from(document.querySelectorAll('[data-view]'));
 
       let filter = 'all';
       let pool = items.map((_, i) => i);
@@ -155,9 +129,8 @@ const ratio = (it: Item) => (it.w / it.h).toFixed(4);
 
       const applyFilter = () => {
         pool = items.map((_, i) => i).filter(matches);
-        for (const el of [...tiles, ...rows]) {
-          const i = Number(el.dataset.i);
-          el.classList.toggle('is-hidden', !matches(i));
+        for (const el of rows) {
+          el.classList.toggle('is-hidden', !matches(Number(el.dataset.i)));
         }
       };
 
@@ -171,7 +144,8 @@ const ratio = (it: Item) => (it.w / it.h).toFixed(4);
         vImg.alt = it.title;
         if (vName) vName.textContent = it.title;
         if (vMeta) vMeta.textContent = cap(it);
-        if (vNote) vNote.textContent = it.note || `${it.serie.replace('系列', '')} · 第 ${cursor + 1} / ${pool.length} 张`;
+        if (vNote)
+          vNote.textContent = `${it.serie.replace('系列', '')} · 第 ${cursor + 1} / ${pool.length} 张`;
         if (vCount) vCount.textContent = `${cursor + 1} / ${pool.length}`;
         viewer.classList.add('is-on');
         document.documentElement.classList.add('is-locked');
@@ -192,31 +166,14 @@ const ratio = (it: Item) => (it.w / it.h).toFixed(4);
         });
       });
 
-      vbtns.forEach((b) => {
-        if (b.dataset.b) return;
-        b.dataset.b = '1';
-        b.addEventListener('click', () => {
-          const mode = b.dataset.view;
-          vbtns.forEach((x) => x.classList.toggle('is-active', x === b));
-          gal.classList.toggle('is-off', mode !== 'grid');
-          list.classList.toggle('is-off', mode !== 'list');
-        });
-      });
-
-      const onClick = (e) => {
-        const hit = e.target.closest('[data-i]');
-        if (!hit) return;
-        const i = Number(hit.dataset.i);
-        const pos = pool.indexOf(i);
-        if (pos >= 0) open(pos);
-      };
-      if (!track.dataset.b) {
-        track.dataset.b = '1';
-        track.addEventListener('click', onClick);
-      }
       if (!list.dataset.b) {
         list.dataset.b = '1';
-        list.addEventListener('click', onClick);
+        list.addEventListener('click', (e) => {
+          const hit = e.target.closest('[data-i]');
+          if (!hit) return;
+          const pos = pool.indexOf(Number(hit.dataset.i));
+          if (pos >= 0) open(pos);
+        });
       }
 
       if (!viewer.dataset.b) {
@@ -227,69 +184,6 @@ const ratio = (it: Item) => (it.w / it.h).toFixed(4);
           if (t.closest('[data-viewer-next]')) return open(cursor + 1);
           if (t.closest('[data-viewer-close]') || t === viewer) close();
         });
-      }
-
-      // 平铺：指针左右推拉 + 滚轮缩放
-      if (!gal.dataset.p) {
-        gal.dataset.p = '1';
-        let z = 1;
-        let zt = 1;
-        let x = 0;
-        let xt = 0;
-        let dragging = false;
-        let dragFrom = 0;
-
-        const maxPan = () => {
-          const over = track.scrollWidth * z - gal.clientWidth;
-          return Math.max(0, over / 2);
-        };
-        const clampX = (v) => {
-          const m = maxPan();
-          return Math.max(-m, Math.min(m, v));
-        };
-
-        const loop = () => {
-          z += (zt - z) * 0.12;
-          x += (xt - x) * 0.12;
-          track.style.transform = `translate3d(${x.toFixed(2)}px, 0, 0) scale(${z.toFixed(4)})`;
-          requestAnimationFrame(loop);
-        };
-
-        gal.addEventListener(
-          'wheel',
-          (e) => {
-            if (gal.classList.contains('is-off')) return;
-            e.preventDefault();
-            zt = Math.max(0.6, Math.min(2.4, zt * (1 - e.deltaY * 0.0012)));
-            xt = clampX(xt);
-          },
-          { passive: false }
-        );
-
-        gal.addEventListener('pointermove', (e) => {
-          if (gal.classList.contains('is-off')) return;
-          if (dragging) {
-            xt = clampX(xt + (e.clientX - dragFrom) * 1.1);
-            dragFrom = e.clientX;
-            return;
-          }
-          const k = (e.clientX / window.innerWidth - 0.5) * 2;
-          xt = clampX(-k * maxPan() * 0.55);
-        });
-
-        gal.addEventListener('pointerdown', (e) => {
-          if (gal.classList.contains('is-off')) return;
-          dragging = true;
-          dragFrom = e.clientX;
-        });
-        gal.addEventListener('pointerup', () => {
-          dragging = false;
-        });
-        gal.addEventListener('pointercancel', () => {
-          dragging = false;
-        });
-
-        loop();
       }
 
       if (!window.__tkKeys) {

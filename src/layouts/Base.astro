@@ -9,11 +9,14 @@ import Hud from '../components/Hud.astro';
 interface Props {
   title?: string;
   description?: string;
+  /** 整屏交互页（如平铺画布）用：不渲染页头/页脚/HUD/胶片边 */
+  bare?: boolean;
 }
 
 const {
-  title = '刘启征 — 数字媒体 & AI 视觉',
-  description = '苏州健雄职业技术学院 · 数字媒体技术在读。做海报、短片与 AI 视觉。',
+  title = '刘启征 — 短片 · 游戏 · 特效',
+  description = '苏州健雄职业技术学院 · 数字媒体技术。短片、虚幻引擎场景与三维特效。',
+  bare = false,
 } = Astro.props;
 ---
 
@@ -49,22 +52,36 @@ const {
       <span class="preloader__word" data-preloader-word>Hello</span>
     </div>
 
-    <div class="film-edge film-edge--l" aria-hidden="true"><span class="film-edge__fill"></span></div>
-    <div class="film-edge film-edge--r" aria-hidden="true"><span class="film-edge__fill"></span></div>
-
     <div class="grain" aria-hidden="true"></div>
     <div class="veil is-on" data-veil aria-hidden="true"></div>
 
-    <div class="marks" aria-hidden="true"><span></span><span></span><span></span><span></span></div>
-      <Hud />
+    {
+      !bare && (
+        <>
+          <div class="film-edge film-edge--l" aria-hidden="true">
+            <span class="film-edge__fill" />
+          </div>
+          <div class="film-edge film-edge--r" aria-hidden="true">
+            <span class="film-edge__fill" />
+          </div>
+          <div class="marks" aria-hidden="true">
+            <span />
+            <span />
+            <span />
+            <span />
+          </div>
+          <Hud />
+          <Header />
+        </>
+      )
+    }
     <Cursor />
-    <Header />
 
     <main>
       <slot />
     </main>
 
-    <Footer />
+    {!bare && <Footer />}
 
     <script>
       import Lenis from 'lenis';

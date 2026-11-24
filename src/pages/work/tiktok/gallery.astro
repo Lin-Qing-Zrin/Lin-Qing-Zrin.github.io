@@ -1,0 +1,169 @@
+---
+import Base from '../../../layouts/Base.astro';
+import raw from '../../../data/tiktok.json';
+
+type Item = {
+  serie: string;
+  serieSlug: string;
+  title: string;
+  src: string;
+  w: number;
+  h: number;
+};
+
+const items = raw as Item[];
+const no = (n: number) => String(n).padStart(2, '0');
+const ratio = (it: Item) => (it.w / it.h).toFixed(4);
+---
+
+<Base
+  title="TikTok — Gallery · 刘启征"
+  description="47 条自发影像，平铺成一张可以推拉的画布。"
+  bare
+>
+  <div class="cvs" data-cvs>
+    <div class="cvs__head mono">
+      <a class="cvs__back" href="/work/tiktok/" data-cursor="hover">← TikTok</a>
+      <span class="cvs__meta">Gallery · {items.length} pieces</span>
+      <span class="cvs__hint">滚动上下 · 移动左右 · 按住拖拽</span>
+    </div>
+
+    <div class="cvs__track" data-track>
+      {
+        items.map((it, i) => (
+          <button
+            class="cvs__tile"
+            type="button"
+            data-i={i}
+            style={`--r:${ratio(it)}`}
+            aria-label={it.title}
+          >
+            <img src={it.src} alt={it.title} loading="lazy" decoding="async" />
+            <span class="cvs__cap mono">
+              <b>{no(i + 1)}</b>
+              {it.title}
+            </span>
+          </button>
+        ))
+      }
+    </div>
+
+    <div class="cvs__foot mono">
+      <span>刘启征 · 抖音帐号</span>
+      <span data-cvs-pos>00 / 47</span>
+    </div>
+  </div>
+
+  <script>
+    function initCanvas() {
+      const root = document.querySelector<HTMLElement>('[data-cvs]');
+      const track = document.querySelector<HTMLElement>('[data-track]');
+      const pos = document.querySelector<HTMLElement>('[data-cvs-pos]');
+      if (!root || !track) return;
+      if (root.dataset.ready === '1') return;
+      root.dataset.ready = '1';
+
+      const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+      // 目标值与当前值：全部走 rAF + lerp，保证丝滑
+      let x = 0;
+      let y = 0;
+      let z = 1;
+      let xt = 0;
+      let yt = 0;
+      let zt = 1;
+
+      let holding = false;
+      let dragFromX = 0;
+      let dragFromY = 0;
+      let xAtDrag = 0;
+      let yAtDrag = 0;
+
+      const minY = () => {
+        const over = track.scrollHeight - root.clientHeight;
+        return Math.min(0, -Math.max(0, over));
+      };
+      const maxX = () => {
+        const over = track.scrollWidth - root.clientWidth;
+        return Math.max(0, over / 2);
+      };
+      const clampY = (v) => Math.max(minY(), Math.min(0, v));
+      const clampX = (v) => Math.max(-maxX(), Math.min(maxX(), v));
+
+      const frame = () => {
+        const k = reduce ? 1 : 0.09;
+        x += (xt - x) * k;
+        y += (yt - y) * k;
+        z += (zt - z) * (reduce ? 1 : 0.14);
+        track.style.transform = `translate3d(${x.toFixed(2)}px, ${y.toFixed(2)}px, 0) scale(${z.toFixed(4)})`;
+        if (pos) {
+          const total = Math.max(1, track.scrollHeight - root.clientHeight);
+          const pct = Math.min(100, Math.round((-y / total) * 100));
+          pos.textContent = `${String(pct).padStart(2, '0')} / 47`;
+        }
+        requestAnimationFrame(frame);
+      };
+      requestAnimationFrame(frame);
+
+      // 滚轮 = 上下平移（不缩放）
+      root.addEventListener(
+        'wheel',
+        (e) => {
+          e.preventDefault();
+          yt = clampY(yt - e.deltaY * 0.9);
+        },
+        { passive: false }
+      );
+
+      // 单纯移动 = 小幅左右平移
+      root.addEventListener('pointermove', (e) => {
+        if (holding) {
+          xt = clampX(xAtDrag + (e.clientX - dragFromX) * 0.8);
+          yt = clampY(yAtDrag + (e.clientY - dragFromY) * 0.8);
+          return;
+        }
+        const k = (e.clientX / window.innerWidth - 0.5) * 2;
+        xt = clampX(-k * 60);
+      });
+
+      // 按住 = 轻微缩小，然后可以左右拖
+      root.addEventListener('pointerdown', (e) => {
+        holding = true;
+        zt = 0.965;
+        dragFromX = e.clientX;
+        dragFromY = e.clientY;
+        xAtDrag = x;
+        yAtDrag = y;
+        root.classList.add('is-holding');
+        try {
+          root.setPointerCapture(e.pointerId);
+        } catch {
+          /* 旧浏览器忽略 */
+        }
+      });
+
+      const release = () => {
+        holding = false;
+        zt = 1;
+        root.classList.remove('is-holding');
+      };
+      root.addEventListener('pointerup', release);
+      root.addEventListener('pointercancel', release);
+      window.addEventListener('pointerup', release);
+      window.addEventListener('blur', release);
+      root.addEventListener('pointerleave', () => {
+        if (!holding) xt = 0;
+      });
+
+      if (!window.__cvsKeys) {
+        window.__cvsKeys = true;
+        window.addEventListener('keydown', (e) => {
+          if (e.key === 'Escape') window.location.href = '/work/tiktok/';
+        });
+      }
+    }
+
+    document.addEventListener('astro:page-load', initCanvas);
+    initCanvas();
+  </script>
+</Base>
