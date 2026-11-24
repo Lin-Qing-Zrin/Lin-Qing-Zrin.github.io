@@ -15,8 +15,12 @@ import { practice } from '../data/practice';
           <p class="mono" data-boot>Film · Game · VFX · Self-media</p>
         </div>
 
-        <h1 class="t-display">
-          <span class="line-mask"><span style="--i:0">刘启征</span></span>
+        <h1 class="t-display hero__name">
+          <span class="line-mask"
+            ><span style="--i:0" data-namefx
+              ><span class="fx-ch">刘</span><span class="fx-ch">启</span><span class="fx-ch">征</span></span
+            ></span
+          >
         </h1>
 
         <p class="hero__lede-s" data-reveal style="--d:1">
@@ -65,6 +69,59 @@ import { practice } from '../data/practice';
 
     document.addEventListener('astro:page-load', bindGlobeReadout);
     bindGlobeReadout();
+
+    // 名字：指针离开的地方失焦，靠近的地方对焦（像镜头拉焦）
+    function bindNameFocus() {
+      const name = document.querySelector<HTMLElement>('[data-namefx]');
+      if (!name) return;
+      const w = window as Window & { __nameFx?: boolean };
+      if (w.__nameFx) return;
+      w.__nameFx = true;
+
+      const chars = [...name.querySelectorAll<HTMLElement>('.fx-ch')];
+      if (!chars.length) return;
+      const hero = name.closest('.hero--instrument') ?? document.body;
+      const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      if (reduce) return;
+
+      let px = -9999;
+      let py = -9999;
+      let inside = false;
+      const cur = chars.map(() => 0);
+
+      hero.addEventListener('pointermove', (e) => {
+        px = (e as PointerEvent).clientX;
+        py = (e as PointerEvent).clientY;
+        inside = true;
+      });
+      hero.addEventListener('pointerleave', () => {
+        inside = false;
+      });
+
+      const loop = () => {
+        chars.forEach((el, i) => {
+          const r = el.getBoundingClientRect();
+          const cx = r.left + r.width / 2;
+          const cy = r.top + r.height / 2;
+          const d = Math.hypot(px - cx, py - cy);
+          const target = inside ? Math.max(0, 1 - d / 300) : 0;
+          cur[i] += (target - cur[i]) * 0.14;
+          const a = cur[i];
+          el.style.transform =
+            a > 0.01 ? `translateY(${(-a * 7).toFixed(1)}px) scale(${(1 + a * 0.016).toFixed(3)})` : '';
+          el.style.filter = a < 0.995 ? `blur(${((1 - a) * 0.9).toFixed(2)}px)` : '';
+          el.style.textShadow =
+            a > 0.04
+              ? `${(a * 5).toFixed(1)}px 0 rgba(255, 59, 31, 0.38), ${(-a * 5).toFixed(1)}px 0 rgba(90, 255, 220, 0.24)`
+              : 'none';
+        });
+        requestAnimationFrame(loop);
+      };
+      loop();
+    }
+
+    document.addEventListener('astro:page-load', bindNameFocus);
+    bindNameFocus();
   </script>
 
   <section class="section wrap">
@@ -132,6 +189,14 @@ import { practice } from '../data/practice';
   </section>
 
   <style>
+    .hero__name .line-mask {
+      overflow: visible;
+    }
+    .hero__name .fx-ch {
+      display: inline-block;
+      transform-origin: 50% 72%;
+      will-change: filter, transform;
+    }
     .prac {
       list-style: none;
       margin: 0;
