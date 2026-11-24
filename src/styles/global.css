@@ -2217,41 +2217,65 @@ html.is-locked {
   z-index: 2;
   background: var(--bg);
 }
-/* PRACTICE 悬停浮现的代表图（小卡片 + View 徽标 + 类别标签） */
+/* PRACTICE：一条竖向连通的预览带（不是弹卡），跟着高亮行上下滑 */
+.prac-stage {
+  position: relative;
+}
 .prac-peek {
-  position: fixed;
-  left: 0;
+  position: absolute;
   top: 0;
-  z-index: 5;
-  width: clamp(168px, 15.5vw, 232px);
-  padding: 7px 7px 0;
+  left: 40%;
+  width: clamp(230px, 25vw, 360px);
+  height: clamp(300px, 30vw, 420px);
+  overflow: hidden;
+  z-index: 2;
   pointer-events: none;
   opacity: 0;
-  transition: opacity 0.26s var(--ease);
-  will-change: transform;
-  background: #0a0a09;
-  outline: 1px solid rgba(236, 233, 227, 0.18);
-  display: grid;
+  transition: opacity 0.32s var(--ease);
+  background: #0d0d0c;
+  outline: 1px solid rgba(236, 233, 227, 0.14);
+  --peek-step: 40%;
 }
 .prac-peek.is-on {
   opacity: 1;
 }
-.prac-peek img {
-  width: 100%;
-  height: auto;
-  max-height: 190px;
-  object-fit: contain;
-  display: block;
-  background: #141311;
+.prac-peek__strip {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  transition: transform 0.62s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: transform;
 }
-/* 圆形 View 徽标，压在图片正中 */
+.prac-peek__item {
+  flex: 0 0 var(--peek-step);
+  height: var(--peek-step);
+  margin: 0;
+  display: grid;
+  place-items: center;
+  padding: 0 clamp(8px, 1vw, 14px);
+}
+.prac-peek__item img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  opacity: 0.3;
+  filter: grayscale(0.5);
+  transition:
+    opacity 0.5s var(--ease),
+    filter 0.5s var(--ease);
+}
+.prac-peek__item.is-near img {
+  opacity: 1;
+  filter: none;
+}
+/* 圆形 View 徽标 */
 .prac-peek__badge {
   position: absolute;
   left: 50%;
   top: 50%;
-  transform: translate(-50%, -56%);
-  width: 52px;
-  height: 52px;
+  transform: translate(-50%, -58%);
+  width: 58px;
+  height: 58px;
   border-radius: 50%;
   display: grid;
   place-items: center;
@@ -2260,11 +2284,10 @@ html.is-locked {
   letter-spacing: 0.04em;
   color: #0a0a09;
   background: var(--accent);
-  mix-blend-mode: normal;
   opacity: 0;
   transition:
-    opacity 0.26s var(--ease),
-    transform 0.36s var(--ease);
+    opacity 0.3s var(--ease),
+    transform 0.4s var(--ease);
 }
 .prac-peek.is-on .prac-peek__badge {
   opacity: 1;
@@ -2275,20 +2298,23 @@ html.is-locked {
   line-height: 1;
 }
 .prac-peek__label {
-  display: block;
-  padding: 7px 2px 8px;
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  padding: 8px 0;
   font-size: 9px;
   letter-spacing: 0.12em;
   text-transform: uppercase;
   color: var(--gray);
   text-align: center;
+  background: linear-gradient(to top, rgba(13, 13, 12, 0.95), transparent);
 }
 @media (hover: none) {
   .prac-peek {
     display: none;
   }
 }
-
 /* 滚动速度让颗粒与齿孔呼吸 */
 .grain {
   opacity: calc(0.05 + var(--vel, 0) * 0.06);

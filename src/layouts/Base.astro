@@ -48,10 +48,6 @@ const {
     <ClientRouter />
   </head>
   <body>
-    <div class="preloader" data-preloader>
-      <span class="preloader__word" data-preloader-word>Hello</span>
-    </div>
-
     <div class="grain" aria-hidden="true"></div>
     <div class="veil is-on" data-veil aria-hidden="true"></div>
 
@@ -503,28 +499,10 @@ const {
       }
 
       /* ------------------------------------------------------------
-         预加载：只在首次进入播放
+         预加载：已移除（访客每次刷新都看到 "Hello" 反而像加载失败）
          ------------------------------------------------------------ */
       function initPreloader() {
-        const el = document.querySelector<HTMLElement>('[data-preloader]');
-        if (!el) return;
-        if (reduceMotion || sessionStorage.getItem('preloaded') === '1') {
-          el.remove();
-          return;
-        }
-        const word = el.querySelector<HTMLElement>('[data-preloader-word]');
-        const words = ['你好', 'Hello', 'Bonjour', 'नमस्ते', 'Ciao', 'Olá', 'おい', 'Hallå', 'Hallo'];
-        let i = 0;
-        const timer = window.setInterval(() => {
-          i = (i + 1) % words.length;
-          if (word) word.textContent = words[i];
-        }, 95);
-        window.setTimeout(() => {
-          window.clearInterval(timer);
-          el.classList.add('is-done');
-          sessionStorage.setItem('preloaded', '1');
-          window.setTimeout(() => el.remove(), 600);
-        }, 900);
+        document.querySelector<HTMLElement>('[data-preloader]')?.remove();
       }
 
       /* ------------------------------------------------------------

@@ -221,76 +221,73 @@ import { practice } from '../data/practice';
     document.addEventListener('astro:page-load', bindHeroMorph);
     bindHeroMorph();
 
-    /* PRACTICE 悬停：光标右侧浮现该方向的一张代表图 */
+    /* PRACTICE：一条竖向连通的预览带，跟着高亮行进的方向上下滑 */
     function bindPracticePeek() {
       const list = document.querySelector<HTMLElement>('[data-prac]');
       const peek = document.querySelector<HTMLElement>('[data-prac-peek]');
-      const img = peek?.querySelector('img');
-      if (!list || !peek || !img) return;
+      const strip = document.querySelector<HTMLElement>('[data-peek-strip]');
+      if (!list || !peek || !strip) return;
       const W = window as Window & { __pracPeek?: boolean };
       if (W.__pracPeek) return;
       W.__pracPeek = true;
       if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
       if (window.matchMedia('(hover: none)').matches) return;
 
-      let tx = window.innerWidth * 0.62;
-      let ty = window.innerHeight * 0.4;
-      let cx = tx;
-      let cy = ty;
+      const items = [...strip.querySelectorAll<HTMLElement>('.prac-peek__item')];
+      const label = peek.querySelector<HTMLElement>('[data-peek-label]');
+      // 当前高亮项的索引：整条带子按「一格的百分比」平移，所以上下能看见相邻两格的一截
+      const setIndex = (i: number) => {
+        strip.style.transform = `translate3d(0, calc(30% - ${i} * var(--peek-step)), 0)`;
+      };
 
-      list.addEventListener('pointermove', (e) => {
-        const ev = e as PointerEvent;
-        tx = ev.clientX + 34;
-        ty = ev.clientY - peek.offsetHeight * 0.5;
-      });
-      list.querySelectorAll<HTMLElement>('[data-peek]').forEach((a) => {
+      list.querySelectorAll<HTMLElement>('[data-peek-index]').forEach((a) => {
+        const i = Number(a.dataset.peekIndex ?? 0);
         a.addEventListener('pointerenter', () => {
-          const src = a.dataset.peek;
-          if (src && img.getAttribute('src') !== src) img.src = src;
-          const label = peek.querySelector<HTMLElement>('[data-peek-label]');
+          setIndex(i);
           if (label) label.textContent = a.dataset.peekLabel ?? '';
           peek.classList.add('is-on');
+          items.forEach((el, k) => el.classList.toggle('is-near', Math.abs(k - i) <= 1));
         });
       });
       list.addEventListener('pointerleave', () => peek.classList.remove('is-on'));
-
-      const loop = () => {
-        cx += (tx - cx) * 0.16;
-        cy += (ty - cy) * 0.16;
-        peek.style.transform = `translate3d(${cx.toFixed(1)}px, ${cy.toFixed(1)}px, 0)`;
-        requestAnimationFrame(loop);
-      };
-      loop();
     }
 
     document.addEventListener('astro:page-load', bindPracticePeek);
     bindPracticePeek();
   </script>
 
-  <section class="section wrap">
+  <section class="section wrap prac-sec">
     <div class="section-head">
       <p class="mono" data-reveal>Practice <span class="cn cn--inline">在做什么</span></p>
       <a class="link-u mono" href="/work/" data-cursor="hover">All categories (7)</a>
     </div>
 
-    <ol class="prac" data-prac>
-      {practice.map((e, i) => (
-        <li class="prac__row" data-reveal style={`--d:${i}`}>
-          <a href={e.href} data-cursor="hover" data-peek={e.img} data-peek-label={e.cn}>
-            <span class="mono prac__no">{e.no}</span>
-            <span class="prac__en">{e.en}</span>
-            <span class="prac__cn">{e.cn}</span>
-            <span class="mono prac__note">{e.note}</span>
-            <span class="mono prac__arrow" aria-hidden="true">↗</span>
-          </a>
-        </li>
-      ))}
-    </ol>
+    <div class="prac-stage">
+      <ol class="prac" data-prac>
+        {practice.map((e, i) => (
+          <li class="prac__row" data-reveal style={`--d:${i}`}>
+            <a href={e.href} data-cursor="hover" data-peek-index={i} data-peek-label={e.cn}>
+              <span class="mono prac__no">{e.no}</span>
+              <span class="prac__en">{e.en}</span>
+              <span class="prac__cn">{e.cn}</span>
+              <span class="mono prac__note">{e.note}</span>
+              <span class="mono prac__arrow" aria-hidden="true">↗</span>
+            </a>
+          </li>
+        ))}
+      </ol>
 
-    <div class="prac-peek" data-prac-peek aria-hidden="true">
-      <img alt="" />
-      <span class="prac-peek__badge">View<span class="prac-peek__arrow">↗</span></span>
-      <span class="prac-peek__label mono" data-peek-label></span>
+      <div class="prac-peek" data-prac-peek aria-hidden="true">
+        <div class="prac-peek__strip" data-peek-strip>
+          {practice.map((e) => (
+            <figure class="prac-peek__item">
+              <img src={e.img} alt="" loading="lazy" decoding="async" />
+            </figure>
+          ))}
+        </div>
+        <span class="prac-peek__badge">View<span class="prac-peek__arrow">↗</span></span>
+        <span class="prac-peek__label mono" data-peek-label></span>
+      </div>
     </div>
   </section>
 

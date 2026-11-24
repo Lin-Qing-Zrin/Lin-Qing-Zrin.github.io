@@ -2,16 +2,29 @@
 import Base from '../layouts/Base.astro';
 import GhostWord from '../components/GhostWord.astro';
 
-// 工具墙：没有真实 logo 文件，用「色块 + 字母/缩写」画，标签在下面
-const tools = [
-  { key: 'ue', label: 'Unreal Engine 5', mark: 'UE', bg: '#1c1c22', fg: '#f2f0eb' },
-  { key: 'blender', label: 'Blender', mark: 'B', bg: '#e87d0d', fg: '#141311' },
-  { key: 'pr', label: 'Premiere Pro', mark: 'Pr', bg: '#2b0a3d', fg: '#c39bff' },
-  { key: 'ae', label: 'After Effects', mark: 'Ae', bg: '#16003a', fg: '#c8a8ff' },
-  { key: 'figma', label: 'Figma', mark: 'F', bg: '#1c1c22', fg: '#f2f0eb' },
-  { key: 'comfy', label: 'ComfyUI', mark: 'Cq', bg: '#0f2a1d', fg: '#8ef0b4' },
-  { key: 'ps', label: 'Photoshop', mark: 'Ps', bg: '#001e36', fg: '#5aa9ff' },
-  { key: 'code', label: 'Cursor · Vibe coding', mark: '↯', bg: '#1c1c22', fg: '#d7ff3f' },
+type Tool = { label: string; logo?: string; mark?: string; bg?: string; fg?: string; invert?: boolean };
+
+// 制作工具：真实品牌 svg 放在 public/logos/
+const stack: Tool[] = [
+  { label: 'Unreal Engine 5', logo: '/logos/ue5.svg', invert: true },
+  { label: 'Blender', logo: '/logos/blender.svg' },
+  { label: 'Premiere Pro', logo: '/logos/premiere.svg', invert: true },
+  { label: 'After Effects', logo: '/logos/aftereffects.svg', invert: true },
+  { label: 'Photoshop', logo: '/logos/photoshop.svg', invert: true },
+  { label: 'Figma', logo: '/logos/figma.svg' },
+  { label: 'ComfyUI', logo: '/logos/comfyui.svg' },
+  { label: 'Cursor · Vibe coding', logo: '/logos/cursor.svg', invert: true },
+];
+
+// AI：日常一起干活的那几个
+const ai: Tool[] = [
+  { label: 'DeepSeek', logo: '/logos/deepseek.svg' },
+  { label: 'ChatGPT', logo: '/logos/chatgpt.svg', invert: true },
+  { label: 'Claude', logo: '/logos/claude.svg' },
+  { label: 'Gemini', logo: '/logos/gemini.svg' },
+  { label: 'Grok', logo: '/logos/grok.svg' },
+  { label: 'GrokBot', logo: '/logos/grok.svg' },
+  { label: 'Antigravity', logo: '/logos/antigravity.svg' },
 ];
 ---
 
@@ -88,10 +101,31 @@ const tools = [
   </section>
 
   <section class="wrap about-tools" data-reveal>
+    <p class="mono tool-cap">STACK <span class="cn cn--inline">制作</span></p>
     <ul class="tool-grid">
-      {tools.map((t) => (
-        <li class="tool" style={`--tbg:${t.bg};--tfg:${t.fg}`}>
-          <span class="tool__mark" aria-hidden="true">{t.mark}</span>
+      {stack.map((t) => (
+        <li class="tool">
+          {t.logo ? (
+            <img class:list={['tool__logo', t.invert && 'is-invert']} src={t.logo} alt={t.label} />
+          ) : (
+            <span class="tool__mark" aria-hidden="true">{t.mark}</span>
+          )}
+          <span class="tool__label">{t.label}</span>
+        </li>
+      ))}
+    </ul>
+
+    <p class="mono tool-cap" style="margin-top: clamp(34px, 4vw, 62px)">
+      AI <span class="cn cn--inline">一起干活的</span>
+    </p>
+    <ul class="tool-grid">
+      {ai.map((t) => (
+        <li class="tool">
+          {t.logo ? (
+            <img class:list={['tool__logo', t.invert && 'is-invert']} src={t.logo} alt={t.label} />
+          ) : (
+            <span class="tool__mark" aria-hidden="true">{t.mark}</span>
+          )}
           <span class="tool__label">{t.label}</span>
         </li>
       ))}
@@ -111,7 +145,11 @@ const tools = [
 
 <style>
   .about-tools {
-    padding-block: clamp(4px, 1vw, 14px) clamp(56px, 8vw, 110px);
+    padding-block: clamp(6px, 1.2vw, 18px) clamp(56px, 8vw, 110px);
+  }
+  .tool-cap {
+    color: var(--gray);
+    margin-bottom: clamp(14px, 1.6vw, 22px);
   }
   .tool-grid {
     display: grid;
@@ -123,37 +161,47 @@ const tools = [
   .tool {
     display: grid;
     justify-items: center;
-    gap: 14px;
-    padding: clamp(22px, 2.4vw, 34px) 12px clamp(16px, 1.8vw, 22px);
+    align-content: center;
+    gap: 16px;
+    min-height: clamp(128px, 13vw, 168px);
+    padding: 20px 12px 18px;
     outline: 1px solid var(--line);
     transition:
       outline-color 0.35s var(--ease),
-      transform 0.35s var(--ease);
-  }
-  .tool__mark {
-    width: clamp(56px, 5vw, 84px);
-    aspect-ratio: 1;
-    display: grid;
-    place-items: center;
-    font-family: var(--font-mono);
-    font-size: clamp(19px, 1.7vw, 26px);
-    font-weight: 500;
-    letter-spacing: 0.04em;
-    background: var(--tbg);
-    color: var(--tfg);
-    border-radius: 18px;
-  }
-  .tool__label {
-    font-family: var(--font-mono);
-    font-size: 11px;
-    letter-spacing: 0.08em;
-    color: var(--gray);
-    text-align: center;
-    line-height: 1.35;
+      transform 0.35s var(--ease),
+      background 0.35s var(--ease);
   }
   .tool:hover {
     outline-color: var(--accent);
     transform: translateY(-3px);
+    background: rgba(236, 233, 227, 0.02);
+  }
+  .tool__logo {
+    width: clamp(44px, 3.6vw, 62px);
+    height: clamp(44px, 3.6vw, 62px);
+    object-fit: contain;
+  }
+  .tool__logo.is-invert {
+    filter: invert(1) brightness(1.15);
+  }
+  .tool__mark {
+    width: clamp(44px, 3.6vw, 62px);
+    aspect-ratio: 1;
+    display: grid;
+    place-items: center;
+    font-family: var(--font-mono);
+    font-size: clamp(17px, 1.5vw, 22px);
+    background: #161614;
+    color: var(--ink);
+    border-radius: 14px;
+  }
+  .tool__label {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.06em;
+    color: var(--gray);
+    text-align: center;
+    line-height: 1.35;
   }
   .about-now {
     padding-bottom: clamp(80px, 12vw, 180px);
