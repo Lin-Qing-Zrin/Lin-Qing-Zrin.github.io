@@ -10,6 +10,7 @@ type Item = {
   src: string;
   w: number;
   h: number;
+  note?: string;
 };
 
 const items = raw as Item[];
@@ -21,6 +22,7 @@ for (const it of items) {
 }
 const no = (n: number) => String(n).padStart(2, '0');
 const total = items.length;
+const ratio = (it: Item) => (it.w / it.h).toFixed(4);
 ---
 
 <Base
@@ -39,34 +41,59 @@ const total = items.length;
     </h1>
     <p class="t-meta" data-reveal style="--d:1">抖音帐号 · {series.length} 个系列 · {total} 条</p>
     <p class="cn" data-reveal style="--d:2">
-      一个人跑完选题、出图、剪辑和发布。下面按系列归档，点任意一条看原图，左右键翻页。
+      一个人跑完选题、出图、剪辑和发布。平铺看图，鼠标左右移动可以推拉，滚轮缩放，点开看大图和说明。
     </p>
   </section>
 
   <section class="wrap" style="padding-bottom: clamp(64px, 10vw, 160px)">
-    <div class="chips" data-chips>
-      <button class="chip is-active" data-chip="all" type="button">
-        All <span class="chip__n">{total}</span>
-      </button>
-      {
-        series.map((s) => (
-          <button class="chip" data-chip={s.slug} type="button">
-            {s.name.replace('系列', '')} <span class="chip__n">{s.count}</span>
-          </button>
-        ))
-      }
+    <div class="toolbar" data-reveal>
+      <div class="chips" data-chips>
+        <button class="chip is-active" data-chip="all" type="button">
+          All <span class="chip__n">{total}</span>
+        </button>
+        {
+          series.map((s) => (
+            <button class="chip" data-chip={s.slug} type="button">
+              {s.name.replace('系列', '')} <span class="chip__n">{s.count}</span>
+            </button>
+          ))
+        }
+      </div>
+      <div class="viewbar mono">
+        <button class="vbtn is-active" data-view="grid" type="button">Grid 平铺</button>
+        <button class="vbtn" data-view="list" type="button">List 列表</button>
+      </div>
     </div>
 
-    <div class="tk-list" data-tk-list>
+    <section class="gal" data-gal>
+      <div class="gal__track" data-gal-track>
+        {
+          items.map((it, i) => (
+            <button
+              class="gal__tile"
+              type="button"
+              data-i={i}
+              data-serie={it.serieSlug}
+              style={`--r:${ratio(it)}`}
+              aria-label={it.title}
+            >
+              <img src={it.src} alt={it.title} loading="lazy" decoding="async" />
+              <span class="gal__cap">{it.title}</span>
+            </button>
+          ))
+        }
+      </div>
+    </section>
+
+    <div class="tk-list is-off" data-tk-list>
       {
         items.map((it, i) => (
           <button
             class="tk-row"
             type="button"
+            data-i={i}
             data-serie={it.serieSlug}
-            data-src={it.src}
-            data-name={it.title}
-            data-meta={`${it.serie.replace('系列', '')} · ${it.w}×${it.h}`}
+            style={`--r:${ratio(it)}`}
           >
             <span class="tk-row__idx">{no(i + 1)}</span>
             <span class="tk-row__thumb">
@@ -90,7 +117,10 @@ const total = items.length;
       <button class="viewer__close" type="button" data-viewer-close>Close ✕</button>
     </div>
     <figure class="viewer__stage">
-      <img data-viewer-img alt="" decoding="async" />
+      <div class="viewer__frame">
+        <img data-viewer-img alt="" decoding="async" />
+        <figcaption class="viewer__note mono" data-viewer-note>—</figcaption>
+      </div>
     </figure>
     <div class="viewer__foot mono">
       <button class="viewer__nav" type="button" data-viewer-prev>← Prev</button>
@@ -99,79 +129,173 @@ const total = items.length;
     </div>
   </div>
 
-  <script>
-    type W = Window & { __tkBound?: boolean };
-
+  <script define:vars={{ items }}>
     function initTiktok() {
-      const root = document.querySelector<HTMLElement>('[data-tk-list]');
-      if (!root) return;
+      const gal = document.querySelector('[data-gal]');
+      const track = document.querySelector('[data-gal-track]');
+      const list = document.querySelector('[data-tk-list]');
+      const viewer = document.querySelector('[data-viewer]');
+      const vImg = document.querySelector('[data-viewer-img]');
+      const vName = document.querySelector('[data-viewer-name]');
+      const vMeta = document.querySelector('[data-viewer-meta]');
+      const vNote = document.querySelector('[data-viewer-note]');
+      const vCount = document.querySelector('[data-viewer-count]');
+      if (!gal || !track || !list || !viewer) return;
 
-      const rows = Array.from(root.querySelectorAll<HTMLButtonElement>('.tk-row'));
-      const chips = Array.from(document.querySelectorAll<HTMLButtonElement>('[data-chip]'));
-      const viewer = document.querySelector<HTMLElement>('[data-viewer]');
-      const vImg = document.querySelector<HTMLImageElement>('[data-viewer-img]');
-      const vName = document.querySelector<HTMLElement>('[data-viewer-name]');
-      const vMeta = document.querySelector<HTMLElement>('[data-viewer-meta]');
-      const vCount = document.querySelector<HTMLElement>('[data-viewer-count]');
+      const tiles = Array.from(track.querySelectorAll('.gal__tile'));
+      const rows = Array.from(list.querySelectorAll('.tk-row'));
+      const chips = Array.from(document.querySelectorAll('[data-chip]'));
+      const vbtns = Array.from(document.querySelectorAll('[data-view]'));
 
-      let pool: HTMLButtonElement[] = rows.slice();
+      let filter = 'all';
+      let pool = items.map((_, i) => i);
       let cursor = 0;
 
-      const open = (i: number) => {
-        if (!viewer || !vImg || !pool.length) return;
-        cursor = (i + pool.length) % pool.length;
-        const row = pool[cursor];
-        vImg.src = row.dataset.src ?? '';
-        vImg.alt = row.dataset.name ?? '';
-        if (vName) vName.textContent = row.dataset.name ?? '';
-        if (vMeta) vMeta.textContent = row.dataset.meta ?? '';
+      const matches = (i) => filter === 'all' || items[i].serieSlug === filter;
+
+      const applyFilter = () => {
+        pool = items.map((_, i) => i).filter(matches);
+        for (const el of [...tiles, ...rows]) {
+          const i = Number(el.dataset.i);
+          el.classList.toggle('is-hidden', !matches(i));
+        }
+      };
+
+      const cap = (it) => `${it.serie.replace('系列', '')} · ${it.w}×${it.h}`;
+
+      const open = (pos) => {
+        if (!pool.length) return;
+        cursor = (pos + pool.length) % pool.length;
+        const it = items[pool[cursor]];
+        vImg.src = it.src;
+        vImg.alt = it.title;
+        if (vName) vName.textContent = it.title;
+        if (vMeta) vMeta.textContent = cap(it);
+        if (vNote) vNote.textContent = it.note || `${it.serie.replace('系列', '')} · 第 ${cursor + 1} / ${pool.length} 张`;
         if (vCount) vCount.textContent = `${cursor + 1} / ${pool.length}`;
         viewer.classList.add('is-on');
         document.documentElement.classList.add('is-locked');
       };
 
       const close = () => {
-        viewer?.classList.remove('is-on');
+        viewer.classList.remove('is-on');
         document.documentElement.classList.remove('is-locked');
       };
 
       chips.forEach((chip) => {
-        if (chip.dataset.chipBound) return;
-        chip.dataset.chipBound = '1';
+        if (chip.dataset.b) return;
+        chip.dataset.b = '1';
         chip.addEventListener('click', () => {
-          const want = chip.dataset.chip ?? 'all';
+          filter = chip.dataset.chip;
           chips.forEach((c) => c.classList.toggle('is-active', c === chip));
-          rows.forEach((r) => {
-            const show = want === 'all' || r.dataset.serie === want;
-            r.classList.toggle('is-hidden', !show);
-          });
-          pool = rows.filter((r) => !r.classList.contains('is-hidden'));
+          applyFilter();
         });
       });
 
-      rows.forEach((row, i) => {
-        row.addEventListener('click', () => open(pool.indexOf(row)));
-        row.addEventListener('pointerenter', () => {
-          const idx = pool.indexOf(row);
-          if (idx < 0) return;
+      vbtns.forEach((b) => {
+        if (b.dataset.b) return;
+        b.dataset.b = '1';
+        b.addEventListener('click', () => {
+          const mode = b.dataset.view;
+          vbtns.forEach((x) => x.classList.toggle('is-active', x === b));
+          gal.classList.toggle('is-off', mode !== 'grid');
+          list.classList.toggle('is-off', mode !== 'list');
         });
-        void i;
       });
 
-      if (viewer && !viewer.dataset.bound) {
-        viewer.dataset.bound = '1';
+      const onClick = (e) => {
+        const hit = e.target.closest('[data-i]');
+        if (!hit) return;
+        const i = Number(hit.dataset.i);
+        const pos = pool.indexOf(i);
+        if (pos >= 0) open(pos);
+      };
+      if (!track.dataset.b) {
+        track.dataset.b = '1';
+        track.addEventListener('click', onClick);
+      }
+      if (!list.dataset.b) {
+        list.dataset.b = '1';
+        list.addEventListener('click', onClick);
+      }
+
+      if (!viewer.dataset.b) {
+        viewer.dataset.b = '1';
         viewer.addEventListener('click', (e) => {
-          const t = e.target as HTMLElement;
+          const t = e.target;
           if (t.closest('[data-viewer-prev]')) return open(cursor - 1);
           if (t.closest('[data-viewer-next]')) return open(cursor + 1);
           if (t.closest('[data-viewer-close]') || t === viewer) close();
         });
       }
 
-      if (!(window as W).__tkBound) {
-        (window as W).__tkBound = true;
+      // 平铺：指针左右推拉 + 滚轮缩放
+      if (!gal.dataset.p) {
+        gal.dataset.p = '1';
+        let z = 1;
+        let zt = 1;
+        let x = 0;
+        let xt = 0;
+        let dragging = false;
+        let dragFrom = 0;
+
+        const maxPan = () => {
+          const over = track.scrollWidth * z - gal.clientWidth;
+          return Math.max(0, over / 2);
+        };
+        const clampX = (v) => {
+          const m = maxPan();
+          return Math.max(-m, Math.min(m, v));
+        };
+
+        const loop = () => {
+          z += (zt - z) * 0.12;
+          x += (xt - x) * 0.12;
+          track.style.transform = `translate3d(${x.toFixed(2)}px, 0, 0) scale(${z.toFixed(4)})`;
+          requestAnimationFrame(loop);
+        };
+
+        gal.addEventListener(
+          'wheel',
+          (e) => {
+            if (gal.classList.contains('is-off')) return;
+            e.preventDefault();
+            zt = Math.max(0.6, Math.min(2.4, zt * (1 - e.deltaY * 0.0012)));
+            xt = clampX(xt);
+          },
+          { passive: false }
+        );
+
+        gal.addEventListener('pointermove', (e) => {
+          if (gal.classList.contains('is-off')) return;
+          if (dragging) {
+            xt = clampX(xt + (e.clientX - dragFrom) * 1.1);
+            dragFrom = e.clientX;
+            return;
+          }
+          const k = (e.clientX / window.innerWidth - 0.5) * 2;
+          xt = clampX(-k * maxPan() * 0.55);
+        });
+
+        gal.addEventListener('pointerdown', (e) => {
+          if (gal.classList.contains('is-off')) return;
+          dragging = true;
+          dragFrom = e.clientX;
+        });
+        gal.addEventListener('pointerup', () => {
+          dragging = false;
+        });
+        gal.addEventListener('pointercancel', () => {
+          dragging = false;
+        });
+
+        loop();
+      }
+
+      if (!window.__tkKeys) {
+        window.__tkKeys = true;
         window.addEventListener('keydown', (e) => {
-          if (!viewer?.classList.contains('is-on')) return;
+          if (!viewer.classList.contains('is-on')) return;
           if (e.key === 'Escape') close();
           if (e.key === 'ArrowLeft') open(cursor - 1);
           if (e.key === 'ArrowRight') open(cursor + 1);
