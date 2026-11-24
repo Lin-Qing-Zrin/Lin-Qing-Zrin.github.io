@@ -2,7 +2,7 @@
 import Base from '../layouts/Base.astro';
 import Globe from '../components/Globe.astro';
 import Field from '../components/Field.astro';
-import { log } from '../data/log';
+import { practice } from '../data/practice';
 ---
 
 <Base>
@@ -69,18 +69,19 @@ import { log } from '../data/log';
 
   <section class="section wrap">
     <div class="section-head">
-      <p class="mono" data-reveal>Log <span class="cn cn--inline">最近在做</span></p>
+      <p class="mono" data-reveal>Practice <span class="cn cn--inline">在做什么</span></p>
       <a class="link-u mono" href="/work/" data-cursor="hover">All categories (7)</a>
     </div>
 
-    <ol class="log" data-log>
-      {log.map((e, i) => (
-        <li class="log__row" data-reveal style={`--d:${i}`}>
+    <ol class="prac" data-prac>
+      {practice.map((e, i) => (
+        <li class="prac__row" data-reveal style={`--d:${i}`}>
           <a href={e.href} data-cursor="hover">
-            <span class="mono log__date">{e.date}</span>
-            <span class="log__title">{e.title}</span>
-            <span class="log__note">{e.note}</span>
-            <span class="mono log__arrow" aria-hidden="true">↗</span>
+            <span class="mono prac__no">{e.no}</span>
+            <span class="prac__en">{e.en}</span>
+            <span class="prac__cn">{e.cn}</span>
+            <span class="mono prac__note">{e.note}</span>
+            <span class="mono prac__arrow" aria-hidden="true">↗</span>
           </a>
         </li>
       ))}
@@ -91,7 +92,7 @@ import { log } from '../data/log';
     <hr class="rule" />
     <div class="section-head">
       <p class="mono" data-reveal>Pipeline <span class="cn cn--inline">一条管线</span></p>
-      <span class="mono section-head__aside" data-reveal style="--d:1">One person · four stages</span>
+      <span class="mono section-head__aside" data-reveal style="--d:1">One person · five stages</span>
     </div>
 
     <ol class="pipe" data-reveal>
@@ -107,13 +108,18 @@ import { log } from '../data/log';
       </li>
       <li class="pipe__node">
         <span class="mono pipe__k">03</span>
-        <span class="pipe__t">Light</span>
-        <span class="cn">打光与特效：材质、体积、粒子</span>
+        <span class="pipe__t">Test</span>
+        <span class="cn">测试：自己走一遍，哪里卡就回去改</span>
       </li>
       <li class="pipe__node">
         <span class="mono pipe__k">04</span>
         <span class="pipe__t">Ship</span>
-        <span class="cn">剪、调色、发出去，然后看数据</span>
+        <span class="cn">发布：剪、调色，发出去</span>
+      </li>
+      <li class="pipe__node">
+        <span class="mono pipe__k">05</span>
+        <span class="pipe__t">Iterate</span>
+        <span class="cn">提升：看数据、看反馈，再回来改</span>
       </li>
     </ol>
 
@@ -126,69 +132,85 @@ import { log } from '../data/log';
   </section>
 
   <style>
-    .log {
+    .prac {
       list-style: none;
       margin: 0;
       padding: 0;
       border-top: 1px solid var(--line);
     }
-    .log__row {
+    .prac__row {
       border-bottom: 1px solid var(--line);
     }
-    .log__row a {
-      display: grid;
-      grid-template-columns: 92px minmax(0, 1fr) minmax(0, 1.1fr) 24px;
+    .prac__row a {
+      display: flex;
       align-items: baseline;
-      gap: clamp(12px, 2vw, 28px);
-      padding: clamp(14px, 1.8vw, 22px) 0;
+      gap: clamp(12px, 1.8vw, 26px);
+      padding: clamp(16px, 2.1vw, 28px) 0;
       text-decoration: none;
       color: inherit;
-      transition: background 0.4s var(--ease);
     }
-    .log__date {
+    .prac__no {
+      flex: none;
+      width: 30px;
       font-size: 10px;
       letter-spacing: 0.14em;
       color: var(--gray);
       transition: color 0.35s var(--ease);
     }
-    .log__title {
+    .prac__en {
+      flex: none;
       font-family: var(--font-display);
-      font-size: clamp(20px, 2.4vw, 34px);
-      letter-spacing: -0.015em;
+      font-size: clamp(28px, 4.2vw, 58px);
+      line-height: 1;
+      letter-spacing: -0.02em;
       color: var(--ink);
-      transition: transform 0.5s var(--ease);
+      transition: transform 0.5s var(--ease), color 0.35s var(--ease);
     }
-    .log__note {
+    .prac__cn {
+      flex: none;
       font-size: 13px;
-      line-height: 1.7;
-      color: var(--ink-2);
+      letter-spacing: 0.02em;
+      color: var(--gray);
       transition: color 0.35s var(--ease);
     }
-    .log__arrow {
+    .prac__note {
+      margin-left: auto;
+      max-width: 38ch;
+      text-align: right;
+      font-size: 10px;
+      letter-spacing: 0.08em;
+      color: var(--gray);
+      transition: color 0.35s var(--ease);
+    }
+    .prac__arrow {
+      flex: none;
       font-size: 13px;
       color: var(--gray);
-      text-align: right;
       transition: color 0.35s var(--ease), transform 0.45s var(--ease);
     }
     @media (hover: hover) {
-      .log__row a:hover .log__title {
-        transform: translateX(10px);
-      }
-      .log__row a:hover .log__date,
-      .log__row a:hover .log__arrow {
+      .prac__row a:hover .prac__en {
+        transform: translateX(12px);
         color: var(--accent);
       }
-      .log__row a:hover .log__arrow {
+      .prac__row a:hover .prac__no,
+      .prac__row a:hover .prac__arrow {
+        color: var(--accent);
+      }
+      .prac__row a:hover .prac__arrow {
         transform: translate(3px, -3px);
       }
+      .prac__row a:hover .prac__cn,
+      .prac__row a:hover .prac__note {
+        color: var(--ink-2);
+      }
     }
-
     .pipe {
       list-style: none;
       margin: 0;
       padding: 0;
       display: grid;
-      grid-template-columns: repeat(4, minmax(0, 1fr));
+      grid-template-columns: repeat(5, minmax(0, 1fr));
       gap: clamp(14px, 2.4vw, 40px);
     }
     .pipe__node {
@@ -245,12 +267,19 @@ import { log } from '../data/log';
     }
 
     @media (max-width: 860px) {
-      .log__row a {
-        grid-template-columns: 72px minmax(0, 1fr) 20px;
+      .prac__row a {
+        flex-wrap: wrap;
         row-gap: 6px;
       }
-      .log__note {
-        grid-column: 2 / -1;
+      .prac__note {
+        order: 5;
+        margin-left: 30px;
+        max-width: none;
+        text-align: left;
+        flex-basis: 100%;
+      }
+      .prac__arrow {
+        margin-left: auto;
       }
       .pipe {
         grid-template-columns: repeat(2, minmax(0, 1fr));
