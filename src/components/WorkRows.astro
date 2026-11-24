@@ -10,6 +10,9 @@ const { items = [] } = Astro.props;
         href={`/work/${work.id}/`}
         data-preview={work.data.cover}
         data-ratio={work.data.ratio}
+        data-title={work.data.title}
+        data-cat={work.data.category}
+        data-label={`${String(i + 1).padStart(2, '0')} — ${work.data.category} — ${work.data.year}`}
         data-reveal
         style={`--d:${i}`}
       >

@@ -967,3 +967,264 @@ html.no-preloader .preloader {
     display: none !important;
   }
 }
+
+/* ============================================================
+   仪器层：颗粒 / 数据场 / 幽灵字 / HUD / 遮罩 / 跑马灯
+   ============================================================ */
+
+/* 颗粒：让大片近黑不那么"平" */
+.grain {
+  position: fixed;
+  inset: -12%;
+  z-index: 54;
+  pointer-events: none;
+  opacity: 0.05;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-size: 160px 160px;
+  animation: grain 1.4s steps(3) infinite;
+  will-change: transform;
+}
+@keyframes grain {
+  0% {
+    transform: translate3d(0, 0, 0);
+  }
+  33% {
+    transform: translate3d(-1.2%, 0.8%, 0);
+  }
+  66% {
+    transform: translate3d(0.9%, -1.1%, 0);
+  }
+  100% {
+    transform: translate3d(-0.6%, -0.9%, 0);
+  }
+}
+
+/* 切页遮罩 */
+.veil {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  background: var(--bg);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.55s var(--ease);
+}
+.veil.is-on {
+  opacity: 1;
+}
+
+/* HUD：帧号 / 滚动进度 / 悬停目标 */
+.hud {
+  position: fixed;
+  top: 96px;
+  right: var(--pad);
+  z-index: 56;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 3px;
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--gray);
+  pointer-events: none;
+  font-variant-numeric: tabular-nums;
+}
+.hud__row {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+}
+.hud__row i {
+  font-style: normal;
+  color: #55524c;
+}
+.hud__row b {
+  font-weight: 400;
+  color: var(--ink-2);
+  min-width: 5ch;
+  text-align: right;
+}
+.hud__target {
+  margin-top: 6px;
+  color: var(--accent);
+  opacity: 0;
+  transform: translateY(-2px);
+  transition: opacity 0.25s var(--ease), transform 0.25s var(--ease);
+  max-width: 44vw;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.hud__target.is-on {
+  opacity: 1;
+  transform: translateY(0);
+}
+@media (max-width: 900px) {
+  .hud {
+    display: none;
+  }
+}
+
+/* 背景数据场：等宽乱码，只做极低频扰动 */
+.hero--instrument {
+  position: relative;
+  isolation: isolate;
+}
+.hero__grid,
+.hero__bottom {
+  position: relative;
+  z-index: 1;
+}
+.field {
+  position: absolute;
+  inset: -4% -3% 0;
+  z-index: 0;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0 1.4vw;
+  overflow: hidden;
+  font-family: var(--font-mono);
+  font-size: 8.5px;
+  line-height: 1.5;
+  letter-spacing: 0.06em;
+  color: #ece9e3;
+  opacity: 0.12;
+  pointer-events: none;
+  mask-image: radial-gradient(72% 62% at 58% 40%, #000 10%, transparent 76%);
+  -webkit-mask-image: radial-gradient(72% 62% at 58% 40%, #000 10%, transparent 76%);
+  will-change: translate;
+}
+.field span {
+  display: block;
+  white-space: pre;
+  overflow: hidden;
+}
+@media (max-width: 860px) {
+  .field {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    opacity: 0.06;
+    mask-image: linear-gradient(to bottom, #000 0%, transparent 44%);
+    -webkit-mask-image: linear-gradient(to bottom, #000 0%, transparent 44%);
+  }
+}
+@media (max-width: 700px) {
+  /* 手机首屏文字贴着顶部，再压一层乱码就糊了：直接关掉 */
+  .field {
+    display: none;
+  }
+}
+
+/* 幽灵大字：贴在标题后面，随滚动轻微位移 */
+.page-head {
+  position: relative;
+  overflow: clip;
+}
+.ghost-word {
+  position: absolute;
+  right: 0;
+  top: 50%;
+  z-index: 0;
+  translate: 0 -50%;
+  font-family: 'Inter Tight', var(--font-mono);
+  font-weight: 600;
+  font-size: clamp(120px, 21vw, 340px);
+  line-height: 0.75;
+  letter-spacing: -0.055em;
+  color: rgba(236, 233, 227, 0.045);
+  white-space: nowrap;
+  pointer-events: none;
+  user-select: none;
+  will-change: translate;
+  mask-image: linear-gradient(to right, transparent, #000 32%);
+  -webkit-mask-image: linear-gradient(to right, transparent, #000 32%);
+}
+@media (max-width: 760px) {
+  .ghost-word {
+    font-size: clamp(90px, 32vw, 200px);
+    color: rgba(236, 233, 227, 0.06);
+  }
+}
+
+/* 页脚跑马灯 */
+.ticker {
+  overflow: hidden;
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+  padding-block: 9px;
+  margin-bottom: clamp(48px, 7vw, 96px);
+}
+.ticker__track {
+  display: flex;
+  width: max-content;
+  animation: ticker 32s linear infinite;
+}
+.ticker__group {
+  display: flex;
+  align-items: baseline;
+  gap: 22px;
+  padding-right: 22px;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--gray);
+  white-space: nowrap;
+}
+.ticker__group i {
+  font-style: normal;
+  color: var(--accent);
+  opacity: 0.75;
+}
+@keyframes ticker {
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+/* 光标标签：hover 作品行时不用大黑球，只用一个小点 + 一行字 */
+.cursor__lbl {
+  position: absolute;
+  left: 18px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--ink);
+  white-space: nowrap;
+  opacity: 0;
+  transition: opacity 0.22s var(--ease);
+  pointer-events: none;
+}
+.cursor.is-label {
+  width: 7px;
+  height: 7px;
+  margin: -3.5px 0 0 -3.5px;
+  background: var(--accent);
+  border-radius: 50%;
+  mix-blend-mode: normal;
+  font-size: 0;
+}
+.cursor.is-label .cursor__lbl {
+  opacity: 1;
+}
+
+/* 桌面端首页名字再放大一档 */
+@media (min-width: 900px) {
+  .hero--instrument .t-display {
+    font-size: clamp(88px, 11.4vw, 188px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .grain,
+  .ticker__track {
+    animation: none;
+  }
+  .veil {
+    display: none;
+  }
+}

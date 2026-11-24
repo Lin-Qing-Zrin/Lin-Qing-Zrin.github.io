@@ -2,6 +2,7 @@
 import Base from '../layouts/Base.astro';
 import WorkRows from '../components/WorkRows.astro';
 import Globe from '../components/Globe.astro';
+import Field from '../components/Field.astro';
 import { getCollection } from 'astro:content';
 
 const works = (await getCollection('works')).sort((a, b) => a.data.order - b.data.order);
@@ -10,6 +11,8 @@ const featured = works.filter((w) => w.data.featured).slice(0, 4);
 
 <Base>
   <section class="hero--instrument wrap">
+    <Field cols={4} />
+
     <div class="hero__grid">
       <div>
         <div class="hero__top" data-reveal>

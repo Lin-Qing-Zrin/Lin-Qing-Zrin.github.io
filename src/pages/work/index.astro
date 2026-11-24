@@ -1,13 +1,15 @@
 ---
 import Base from '../../layouts/Base.astro';
 import WorkRows from '../../components/WorkRows.astro';
+import GhostWord from '../../components/GhostWord.astro';
 import { getCollection } from 'astro:content';
 
 const works = (await getCollection('works')).sort((a, b) => a.data.order - b.data.order);
 ---
 
-<Base title="Work — Your Name" description="Selected work: posters, short films and AI visual experiments.">
+<Base title="Work — 刘启征" description="Selected work: posters, short films and AI visual experiments.">
   <section class="page-head wrap">
+    <GhostWord text="Work" />
     <h1 class="t-display">
       <span class="line-mask"><span style="--i:0">Work</span></span>
     </h1>

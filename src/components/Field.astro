@@ -1,0 +1,8 @@
+---
+interface Props {
+  cols?: number;
+}
+const { cols = 4 } = Astro.props;
+---
+
+<div class="field" data-field data-cols={cols} aria-hidden="true"></div>
