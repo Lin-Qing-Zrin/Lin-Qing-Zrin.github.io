@@ -205,3 +205,12 @@ git push -u origin main
 | 详请页 | 滚动到底 | Plate 01 · 4:5 · 2024 图注 + 三栏规格 + Next 下一件 | [...slug].astro |
 
 新增交互前先问一句：**它有没有告诉用户一件他不知道的事？** 没有就别加。
+| 两侧齿孔 | 滚动 | 荧光绿逐格「曝光」到当前阅读进度 | initFilmProgress() 写 --p，.film-edge__fill 读它 |
+| 页脚 CTA | 悬停单个字母 | 那个字母抬起 8% + 转 -2.5° 并变荧光色 | 每个字母一个 .footer-cta__ch，纯 CSS :hover |
+| 作品行标题 | 移动指针 | 标题随指针横向位置滑动（左 6px → 右 32px） | pointermove 里按 (e.clientX - rect.left) / rect.width 插值 |
+| REC 时间码 | 点击 | 定格 / 继续 | .tc.is-frozen + 	cFrozenAt 记录冻结时刻 |
+| 光标 | 快速移动 | 沿运动方向拉伸成墨点 | rame() 里按速度算 scaleX/scaleY + otate |
+| 作品预览卡 | 横向甩动 | 按横向速度倾斜（最多 ±7°） | rame() 里 otate(clamp(dx*0.09)) |
+| 跑马灯 | 悬停 | 暂停 | .ticker:hover .ticker__track |
+| 导航 | 悬停 | 细线从左长出 | .nav a::after + scaleX |
+| 四角 | — | 取景框角标（仅桌面） | .marks 四个 span |

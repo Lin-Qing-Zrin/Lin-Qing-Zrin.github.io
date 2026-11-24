@@ -1397,3 +1397,119 @@ html.no-preloader .preloader {
 .boot-mono {
   display: inline-block;
 }
+
+/* ============================================================
+   小交互：胶片进度 / 逐字抬起 / 跑马灯暂停
+   ============================================================ */
+
+/* 两侧胶片齿孔随滚动「曝光」进度：读到哪，亮到哪 */
+.film-edge__fill {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  height: var(--p, 0%);
+  background-image: repeating-linear-gradient(
+    to bottom,
+    var(--accent) 0 9px,
+    transparent 9px 30px
+  );
+  background-size: 6px 30px;
+  background-position: center top;
+  background-repeat: repeat-y;
+  opacity: 0.7;
+}
+
+/* 页脚 CTA：每个字母自己抬一下（纯 CSS，不需要 JS 猜位置） */
+.footer-cta__ch {
+  display: inline-block;
+  transition: transform 0.4s var(--ease), color 0.4s var(--ease);
+  will-change: transform;
+}
+.footer-cta__ch:hover {
+  transform: translateY(-0.07em) rotate(-2.5deg);
+  color: var(--accent);
+}
+.footer-cta__sp {
+  display: inline-block;
+  width: 0.24em;
+}
+
+/* 跑马灯：指针放上去就停下，方便看清写的什么 */
+@media (hover: hover) {
+  .ticker:hover .ticker__track {
+    animation-play-state: paused;
+  }
+}
+
+/* 时间码被点住时，红点不再呼吸 */
+.tc.is-frozen .tc__dot,
+.tc.is-frozen::before {
+  animation: none;
+}
+
+/* 四角定位角标：仪器取景框的暗示，只露一点 */
+.marks {
+  position: fixed;
+  inset: 0;
+  z-index: 39;
+  pointer-events: none;
+}
+.marks span {
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  border-color: rgba(236, 233, 227, 0.3);
+  border-style: solid;
+  border-width: 0;
+}
+.marks span:nth-child(1) {
+  top: 14px;
+  left: 26px;
+  border-top-width: 1px;
+  border-left-width: 1px;
+}
+.marks span:nth-child(2) {
+  top: 14px;
+  right: 26px;
+  border-top-width: 1px;
+  border-right-width: 1px;
+}
+.marks span:nth-child(3) {
+  bottom: 14px;
+  left: 26px;
+  border-bottom-width: 1px;
+  border-left-width: 1px;
+}
+.marks span:nth-child(4) {
+  bottom: 14px;
+  right: 26px;
+  border-bottom-width: 1px;
+  border-right-width: 1px;
+}
+@media (max-width: 899px) {
+  .marks {
+    display: none;
+  }
+}
+
+/* 导航：细线从左边长出来，不做颜色变化 */
+.nav a {
+  position: relative;
+}
+.nav a::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -4px;
+  height: 1px;
+  background: currentColor;
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.45s var(--ease);
+}
+.nav a:hover::after {
+  transform: scaleX(1);
+}
+

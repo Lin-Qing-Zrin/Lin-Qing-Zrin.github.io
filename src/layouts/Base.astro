@@ -49,13 +49,14 @@ const {
       <span class="preloader__word" data-preloader-word>Hello</span>
     </div>
 
-    <div class="film-edge film-edge--l" aria-hidden="true"></div>
-    <div class="film-edge film-edge--r" aria-hidden="true"></div>
+    <div class="film-edge film-edge--l" aria-hidden="true"><span class="film-edge__fill"></span></div>
+    <div class="film-edge film-edge--r" aria-hidden="true"><span class="film-edge__fill"></span></div>
 
     <div class="grain" aria-hidden="true"></div>
     <div class="veil is-on" data-veil aria-hidden="true"></div>
 
-    <Hud />
+    <div class="marks" aria-hidden="true"><span></span><span></span><span></span><span></span></div>
+      <Hud />
     <Cursor />
     <Header />
 
@@ -114,12 +115,21 @@ const {
         if (cursorEl) {
           cx += (pointer.x - cx) * 0.15;
           cy += (pointer.y - cy) * 0.15;
-          cursorEl.style.transform = `translate3d(${cx}px, ${cy}px, 0)`;
+          // 光标按移动速度轻微拉伸：像一颗被甩着走的墨点
+          const sp = Math.min(Math.hypot(pointer.x - cx, pointer.y - cy) / 90, 0.55);
+          const ang = (Math.atan2(pointer.y - cy, pointer.x - cx) * 180) / Math.PI;
+          cursorEl.style.transform =
+            `translate3d(${cx}px, ${cy}px, 0) rotate(${ang.toFixed(1)}deg) ` +
+            `scaleX(${(1 + sp).toFixed(3)}) scaleY(${(1 - sp * 0.4).toFixed(3)})`;
         }
         if (previewEl) {
           px += (pointer.x - px) * 0.12;
           py += (pointer.y - py) * 0.12;
-          previewEl.style.transform = `translate3d(${px + 28}px, ${py - previewEl.offsetHeight / 2}px, 0)`;
+          // 卡片按横向速度轻微倾斜：像手里捏着一张图
+          const tilt = Math.max(-7, Math.min(7, (pointer.x - px) * 0.09));
+          previewEl.style.transform =
+            `translate3d(${px + 28}px, ${py - previewEl.offsetHeight / 2}px, 0) ` +
+            `rotate(${tilt.toFixed(2)}deg)`;
         }
 
         // 背景层跟着指针反向微移：8~16px 就够，多了像玩具
@@ -362,11 +372,20 @@ const {
         const ghostDefault = ghost?.textContent ?? '';
 
         document.querySelectorAll<HTMLElement>('[data-title]').forEach((row) => {
+          const title = row.querySelector<HTMLElement>('.work-row__title');
           row.addEventListener('pointerenter', () => {
             if (row.dataset.label) setHudTarget(row.dataset.label);
             if (row.dataset.cat && ghost) fitGhost(ghost, row.dataset.cat);
           });
+          // 标题跟着指针位置走：左边少、右边多，像被指针推着让路
+          row.addEventListener('pointermove', (e) => {
+            if (!title) return;
+            const r = row.getBoundingClientRect();
+            const k = Math.min(Math.max((e.clientX - r.left) / r.width, 0), 1);
+            title.style.transform = `translateX(${(6 + k * 26).toFixed(1)}px)`;
+          });
           row.addEventListener('pointerleave', (e) => {
+            if (title) title.style.transform = '';
             const to = e.relatedTarget;
             if (to instanceof Element && to.closest('[data-title]')) return;
             setHudTarget('');
@@ -462,7 +481,8 @@ const {
          24fps 时间码（片边 REC 读数）
          ------------------------------------------------------------ */
       let tcRaf = 0;
-      const tcStart = performance.now();
+      let tcFrozenAt = 0;
+      let tcStart = performance.now();
       function initTimecode() {
         cancelAnimationFrame(tcRaf);
         const nodes = document.querySelectorAll<HTMLElement>('[data-tc]');
@@ -481,6 +501,25 @@ const {
           nodes.forEach((n) => (n.textContent = '00:00:00:00'));
           return;
         }
+
+        // 小彩蛋：点一下 REC 时间码就"定格"，再点继续走
+        const tc = document.querySelector<HTMLElement>('.tc');
+        if (tc && !tc.dataset.tcBound) {
+          tc.dataset.tcBound = '1';
+          tc.style.cursor = 'pointer';
+          tc.title = 'Click to freeze';
+          tc.addEventListener('click', () => {
+            const frozen = tc.classList.toggle('is-frozen');
+            if (frozen) {
+              tcFrozenAt = performance.now() - tcStart;
+              cancelAnimationFrame(tcRaf);
+            } else {
+              tcStart = performance.now() - tcFrozenAt;
+              run();
+            }
+          });
+        }
+
         run();
       }
 
@@ -543,6 +582,33 @@ const {
         });
       }
 
+      /* ------------------------------------------------------------
+         胶片齿孔 = 阅读进度：读到哪儿，齿孔就「曝光」到哪儿
+         ------------------------------------------------------------ */
+      let edgeRaf = 0;
+      function initFilmProgress() {
+        const edges = Array.from(document.querySelectorAll<HTMLElement>('.film-edge'));
+        if (!edges.length) return;
+        const apply = () => {
+          edgeRaf = 0;
+          const max = document.documentElement.scrollHeight - window.innerHeight;
+          const p = max > 0 ? Math.min(Math.max(window.scrollY / max, 0), 1) : 0;
+          edges.forEach((el) => el.style.setProperty('--p', (p * 100).toFixed(2) + '%'));
+          document.documentElement.style.setProperty('--read', p.toFixed(4));
+        };
+        apply();
+        if ((window as Window & { __edgeBound?: boolean }).__edgeBound) return;
+        (window as Window & { __edgeBound?: boolean }).__edgeBound = true;
+        window.addEventListener(
+          'scroll',
+          () => {
+            if (!edgeRaf) edgeRaf = requestAnimationFrame(apply);
+          },
+          { passive: true }
+        );
+        window.addEventListener('resize', apply);
+      }
+
       function boot() {
         initPreloader();
         initLenis();
@@ -555,6 +621,7 @@ const {
         initGhosts();
         initMagnetic();
         bootMono();
+        initFilmProgress();
         initVeil();
         initPreview();
         initCursor();
