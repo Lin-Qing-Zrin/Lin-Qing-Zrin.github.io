@@ -799,7 +799,7 @@ html.is-ready .line-mask > span {
     transparent 9px 30px
   );
   background-size: 6px 30px;
-  background-position: center;
+  background-position: center calc(var(--adv, 0px) * 1);
   background-repeat: repeat-y;
   opacity: 0.75;
   mask-image: linear-gradient(to bottom, transparent, #000 12%, #000 88%, transparent);
@@ -2422,4 +2422,17 @@ html.is-locked {
   font-size: 9px;
   letter-spacing: 0.24em;
   color: var(--gray);
+}
+
+/* 过片：画面本身轻微 gate weave。只作用在没有 fixed 子元素的图上，
+   否则会破坏 .prac-peek / .cursor 的视口坐标。 */
+@media (prefers-reduced-motion: no-preference) {
+  .reel__slide img,
+  .take__video,
+  .work-row__thumb img,
+  .ps-tile,
+  .vf-frame,
+  .id-plate {
+    transform: translateY(calc(var(--weave, 0px) * 1.8));
+  }
 }

@@ -686,6 +686,13 @@ const {
           const p = max > 0 ? Math.min(Math.max(window.scrollY / max, 0), 1) : 0;
           edges.forEach((el) => el.style.setProperty('--p', (p * 100).toFixed(2) + '%'));
           document.documentElement.style.setProperty('--read', p.toFixed(4));
+          /* 齿孔真的走格：每滚过一格距离，齿孔上移一格，像胶片过片 */
+          const STEP = 22;
+          const adv = Math.round(window.scrollY / 34) * STEP;
+          document.documentElement.style.setProperty('--adv', adv + 'px');
+          /* 过片的轻微晃动（gate weave），只在滚动时存在 */
+          const weave = Math.round(Math.sin(window.scrollY * 0.05) * 0.7 * 10) / 10;
+          document.documentElement.style.setProperty('--weave', weave.toFixed(1) + 'px');
         };
         apply();
         if ((window as Window & { __edgeBound?: boolean }).__edgeBound) return;
