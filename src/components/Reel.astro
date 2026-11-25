@@ -1,0 +1,372 @@
+---
+/**
+ * 首屏那台"剪辑机"：一块 16:9 的监视器，循环放映七件作品。
+ * 底部进度条可以拖（scrub），拖动时停在那一帧；不碰它才自己往下走。
+ */
+const slides = [
+  { src: '/images/film/mv-winter.webp', title: '再等冬天', cat: 'AI Film', meta: '2025 · MV' },
+  { src: '/images/film/su-shi.webp', title: '苏轼', cat: 'AI Film', meta: '2026 · 影像' },
+  { src: '/images/game/moyu.webp', title: '摸鱼接接乐', cat: 'Game', meta: '2026 · 可试玩' },
+  { src: '/images/tiktok/s6/01.webp', title: '星月夜', cat: '3D & VFX', meta: '2025 · 渲染' },
+  { src: '/images/ui/weather.webp', title: '枕边气象站', cat: 'Product UI', meta: '2025 · 双端' },
+  { src: '/images/identity/bupian-product.webp', title: '不偏 · 书签', cat: 'Identity', meta: '2026 · 文创' },
+  { src: '/images/poster/p01.webp', title: '渡口', cat: 'Poster', meta: '2024 · 印刷' },
+];
+---
+
+<div class="reel" data-reel>
+  <div class="reel__frame">
+    <div class="reel__screen">
+      {slides.map((s, i) => (
+        <figure
+          class={`reel__slide${i === 0 ? ' is-on' : ''}`}
+          data-slide={i}
+          data-cat={s.cat}
+          data-title={s.title}
+          data-meta={s.meta}
+        >
+          <img src={s.src} alt={`${s.title} — ${s.cat}`} loading={i === 0 ? 'eager' : 'lazy'} />
+        </figure>
+      ))}
+
+      <span class="reel__scan" aria-hidden="true"></span>
+
+      <div class="reel__hud mono">
+        <span data-reel-count>01 / 07</span>
+        <span data-reel-cat>{slides[0].cat}</span>
+      </div>
+
+      <figcaption class="reel__cap">
+        <span class="reel__title" data-reel-title>{slides[0].title}</span>
+        <span class="mono reel__meta" data-reel-meta>{slides[0].meta}</span>
+      </figcaption>
+
+      <div
+        class="reel__bar"
+        role="slider"
+        tabindex="0"
+        aria-label="切换作品"
+        aria-valuemin="0"
+        aria-valuemax={slides.length - 1}
+        aria-valuenow="0"
+        data-reel-bar
+      >
+        <span class="reel__fill" data-reel-fill></span>
+        {slides.map((_, i) => <span class="reel__tick" style={`--i:${i}`} data-tick={i}></span>)}
+      </div>
+    </div>
+
+    <span class="reel__corner reel__corner--tl" aria-hidden="true"></span>
+    <span class="reel__corner reel__corner--tr" aria-hidden="true"></span>
+    <span class="reel__corner reel__corner--bl" aria-hidden="true"></span>
+    <span class="reel__corner reel__corner--br" aria-hidden="true"></span>
+  </div>
+
+  <p class="mono reel__hint">拖进度条换片 · 悬停暂停</p>
+</div>
+
+<script>
+  function initReel() {
+    const root = document.querySelector<HTMLElement>('[data-reel]');
+    if (!root) return;
+    const W = window as Window & { __reelBound?: boolean };
+    if (W.__reelBound) return;
+    W.__reelBound = true;
+
+    const slides = [...root.querySelectorAll<HTMLElement>('[data-slide]')];
+    const fill = root.querySelector<HTMLElement>('[data-reel-fill]');
+    const count = root.querySelector<HTMLElement>('[data-reel-count]');
+    const cat = root.querySelector<HTMLElement>('[data-reel-cat]');
+    const title = root.querySelector<HTMLElement>('[data-reel-title]');
+    const meta = root.querySelector<HTMLElement>('[data-reel-meta]');
+    const bar = root.querySelector<HTMLElement>('[data-reel-bar]');
+    if (!slides.length || !fill || !bar) return;
+
+    const DUR = 3600;
+    let index = 0;
+    let progress = 0;
+    let paused = false;
+    let scrubbing = false;
+    let last = performance.now();
+
+    const paint = () => {
+      fill.style.transform = `scaleX(${progress.toFixed(4)})`;
+      bar.setAttribute('aria-valuenow', String(index));
+    };
+
+    const show = (i: number) => {
+      index = (i + slides.length) % slides.length;
+      slides.forEach((s, k) => s.classList.toggle('is-on', k === index));
+      const s = slides[index];
+      if (count) count.textContent = `${String(index + 1).padStart(2, '0')} / ${String(slides.length).padStart(2, '0')}`;
+      if (cat) cat.textContent = s.dataset.cat ?? '';
+      if (title) title.textContent = s.dataset.title ?? '';
+      if (meta) meta.textContent = s.dataset.meta ?? '';
+    };
+
+    show(0);
+    paint();
+
+    const tick = (now: number) => {
+      const dt = Math.min(64, now - last);
+      last = now;
+      if (!paused && !scrubbing) {
+        progress += dt / DUR;
+        if (progress >= 1) {
+          progress = 0;
+          show(index + 1);
+        }
+      }
+      paint();
+      requestAnimationFrame(tick);
+    };
+
+    const scrubTo = (clientX: number) => {
+      const r = bar.getBoundingClientRect();
+      const p = Math.min(1, Math.max(0, (clientX - r.left) / r.width));
+      const total = p * slides.length;
+      const idx = Math.min(slides.length - 1, Math.floor(total));
+      if (idx !== index) show(idx);
+      progress = total - idx;
+      paint();
+    };
+
+    bar.addEventListener('pointerdown', (e) => {
+      scrubbing = true;
+      try {
+        bar.setPointerCapture(e.pointerId);
+      } catch {
+        /* ignore */
+      }
+      scrubTo(e.clientX);
+    });
+    bar.addEventListener('pointermove', (e) => {
+      if (scrubbing) scrubTo(e.clientX);
+    });
+    const stop = () => {
+      scrubbing = false;
+    };
+    bar.addEventListener('pointerup', stop);
+    bar.addEventListener('pointercancel', stop);
+    window.addEventListener('pointerup', stop);
+
+    bar.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowRight') {
+        progress = 0;
+        show(index + 1);
+      } else if (e.key === 'ArrowLeft') {
+        progress = 0;
+        show(index - 1);
+      }
+    });
+
+    root.addEventListener('pointerenter', () => {
+      paused = true;
+    });
+    root.addEventListener('pointerleave', () => {
+      paused = false;
+      last = performance.now();
+    });
+
+    if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      requestAnimationFrame(tick);
+    }
+  }
+
+  document.addEventListener('astro:page-load', initReel);
+  initReel();
+</script>
+
+<style>
+  .reel {
+    position: relative;
+    width: 100%;
+  }
+
+  .reel__frame {
+    position: relative;
+    padding: clamp(6px, 0.7vw, 10px);
+    border: 1px solid var(--line);
+    background: linear-gradient(180deg, rgba(236, 233, 227, 0.04), rgba(236, 233, 227, 0));
+  }
+
+  .reel__screen {
+    position: relative;
+    aspect-ratio: 16 / 9;
+    overflow: hidden;
+    background: #080807;
+  }
+
+  .reel__slide {
+    position: absolute;
+    inset: 0;
+    margin: 0;
+    opacity: 0;
+    transition: opacity 0.62s var(--ease);
+  }
+  .reel__slide.is-on {
+    opacity: 1;
+  }
+  .reel__slide img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    transform: scale(1.04);
+    transition: transform 4.6s linear;
+  }
+  .reel__slide.is-on img {
+    transform: scale(1);
+  }
+
+  /* 扫描线：让它像一台真的监视器 */
+  .reel__scan {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background-image: repeating-linear-gradient(
+      to bottom,
+      rgba(0, 0, 0, 0.22) 0 1px,
+      rgba(0, 0, 0, 0) 1px 3px
+    );
+    mix-blend-mode: multiply;
+    opacity: 0.55;
+  }
+
+  .reel__hud {
+    position: absolute;
+    top: 10px;
+    left: 12px;
+    right: 12px;
+    display: flex;
+    justify-content: space-between;
+    font-size: 9px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: rgba(12, 12, 12, 0.72);
+    mix-blend-mode: difference;
+    color: #ece9e3;
+    pointer-events: none;
+  }
+
+  .reel__cap {
+    position: absolute;
+    left: 12px;
+    bottom: 26px;
+    right: 12px;
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 12px;
+    pointer-events: none;
+  }
+  .reel__title {
+    font-family: var(--font-serif);
+    font-weight: 900;
+    font-size: clamp(20px, 2.1vw, 32px);
+    line-height: 1;
+    color: #f5eddd;
+    text-shadow: 0 1px 18px rgba(0, 0, 0, 0.6);
+  }
+  .reel__meta {
+    font-size: 9px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: rgba(245, 237, 221, 0.72);
+  }
+
+  /* 进度条：整条 = 七段 */
+  .reel__bar {
+    position: absolute;
+    left: 12px;
+    right: 12px;
+    bottom: 10px;
+    height: 12px;
+    cursor: ew-resize;
+    touch-action: none;
+  }
+  .reel__bar::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 50%;
+    height: 1px;
+    background: rgba(236, 233, 227, 0.28);
+  }
+  .reel__fill {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 50%;
+    height: 1px;
+    background: var(--accent);
+    transform-origin: 0 50%;
+    transform: scaleX(0);
+  }
+  .reel__tick {
+    position: absolute;
+    top: 50%;
+    left: calc(var(--i) * (100% / 7));
+    width: 1px;
+    height: 6px;
+    margin-top: -3px;
+    background: rgba(236, 233, 227, 0.35);
+  }
+  .reel__tick:first-of-type {
+    left: 0;
+  }
+
+  /* 四角十字，像取景器 */
+  .reel__corner {
+    position: absolute;
+    width: 10px;
+    height: 10px;
+    border: 0 solid var(--line);
+    pointer-events: none;
+  }
+  .reel__corner--tl {
+    left: -1px;
+    top: -1px;
+    border-left-width: 1px;
+    border-top-width: 1px;
+  }
+  .reel__corner--tr {
+    right: -1px;
+    top: -1px;
+    border-right-width: 1px;
+    border-top-width: 1px;
+  }
+  .reel__corner--bl {
+    left: -1px;
+    bottom: -1px;
+    border-left-width: 1px;
+    border-bottom-width: 1px;
+  }
+  .reel__corner--br {
+    right: -1px;
+    bottom: -1px;
+    border-right-width: 1px;
+    border-bottom-width: 1px;
+  }
+
+  .reel__hint {
+    margin-top: 10px;
+    font-size: 9px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--gray);
+  }
+
+  @media (max-width: 900px) {
+    .reel__cap {
+      bottom: 24px;
+    }
+    .reel__title {
+      font-size: 20px;
+    }
+    .reel__hint {
+      display: none;
+    }
+  }
+</style>
