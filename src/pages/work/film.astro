@@ -8,9 +8,10 @@ const films = [
     en: 'Wait For Winter',
     sub: 'MV · 音乐短片',
     year: '2025',
-    len: '—',
+    len: '2:48',
     ratio: '16:9',
     cover: '/images/film/mv-winter.webp',
+    src: '/videos/mv-winter.mp4',
     tools: 'AI 生成 · 调色 · 合成',
     blurb: '一首歌的时间，把冬天的冷和等一个人的热放在同一条时间线上。',
     role: '画面 / 剪辑 / 调色',
@@ -21,9 +22,10 @@ const films = [
     en: 'Su Shi',
     sub: 'vibe 系列 · 人物短片',
     year: '2026',
-    len: '—',
+    len: '0:54',
     ratio: '16:9',
     cover: '/images/film/su-shi.webp',
+    src: '/videos/su-shi.mp4',
     tools: 'AI 生成 · 剪辑',
     blurb: 'vibe 系列的第二个人物。比起讲他的生平，我更想拍他站在风里的那一下。',
     role: '画面 / 剪辑',
@@ -37,6 +39,7 @@ const films = [
     len: '80s',
     ratio: '16:9',
     cover: '/images/film/wangyangming.webp',
+    src: '/videos/wangyangming.mp4',
     tools: 'AI 生成 · 分镜 · 剪辑',
     blurb: '80 秒讲完王阳明：把「心即理」拆成三个能看懂的镜头段落，全部画面由 AI 生成。',
     role: '脚本 / 分镜 / 生成 / 剪辑',
@@ -69,9 +72,21 @@ const films = [
             <div><dt>TOOLS</dt><dd>{f.tools}</dd></div>
           </dl>
         </div>
-        <figure class="take__frame">
-          <img src={f.cover} alt={`${f.title} 画面`} loading={i === 0 ? 'eager' : 'lazy'} />
+        <figure class="take__frame" data-frame>
+          <video
+            class="take__video"
+            poster={f.cover}
+            data-src={f.src}
+            preload="none"
+            playsinline
+            muted
+            loop
+            aria-label={`${f.title} 影片`}></video>
           <span class="take__scan" aria-hidden="true"></span>
+          <button class="take__play mono" type="button" data-play>
+            <span class="take__play-dot" aria-hidden="true"></span>
+            <span data-play-label>PLAY</span>
+          </button>
           <figcaption class="mono">FRAME {f.n} · {f.sub}</figcaption>
         </figure>
       </article>
@@ -87,10 +102,64 @@ const films = [
     const reel = document.querySelector('[data-reel]');
     if (reel) {
       const takes = [...reel.querySelectorAll('[data-take]')];
+      const frames = [...reel.querySelectorAll<HTMLElement>('[data-frame]')];
+
+      const pauseOthers = (keep: HTMLVideoElement | null) => {
+        for (const v of reel.querySelectorAll<HTMLVideoElement>('video')) {
+          if (v !== keep) v.pause();
+        }
+        for (const f of frames) {
+          const v = f.querySelector('video');
+          if (v && v !== keep) f.classList.remove('is-playing');
+        }
+      };
+
+      for (const frame of frames) {
+        const video = frame.querySelector<HTMLVideoElement>('video');
+        const btn = frame.querySelector<HTMLButtonElement>('[data-play]');
+        const label = frame.querySelector<HTMLElement>('[data-play-label]');
+        if (!video || !btn || !label) continue;
+
+        const toggle = () => {
+          if (video.paused) {
+            const src = video.dataset.src;
+            if (src && !video.src) {
+              video.src = src;
+              video.load();
+            }
+            pauseOthers(video);
+            void video.play().catch(() => {
+              /* 自动播放被浏览器拦下时保持封面 */
+            });
+          } else {
+            video.pause();
+          }
+        };
+
+        btn.addEventListener('click', (e) => {
+          e.preventDefault();
+          toggle();
+        });
+        frame.addEventListener('click', (e) => {
+          if ((e.target as HTMLElement).closest('[data-play]')) return;
+          toggle();
+        });
+
+        video.addEventListener('play', () => {
+          frame.classList.add('is-playing');
+          label.textContent = 'PAUSE';
+        });
+        video.addEventListener('pause', () => {
+          frame.classList.remove('is-playing');
+          label.textContent = 'PLAY';
+        });
+      }
+
       const io = new IntersectionObserver(
         (entries) => {
           for (const e of entries) {
             if (e.isIntersecting) e.target.classList.add('is-live');
+            else e.target.querySelector('video')?.pause();
           }
         },
         { threshold: 0.35 }
@@ -191,18 +260,64 @@ const films = [
     margin: 0;
     overflow: hidden;
     background: var(--bg-deep);
+    cursor: pointer;
   }
-  .take__frame img {
+  .take__video {
     display: block;
     width: 100%;
     height: auto;
+    aspect-ratio: 16 / 9;
+    object-fit: cover;
+    background: #060605;
     transform: scale(1.02);
     transition: transform 1.2s var(--ease), filter 0.8s var(--ease);
     filter: saturate(0.94) contrast(1.02);
   }
-  .take__frame:hover img {
+  .take__frame:hover .take__video {
     transform: scale(1.05);
     filter: saturate(1.04) contrast(1.04);
+  }
+  .take__frame.is-playing .take__video {
+    transform: scale(1);
+  }
+  .take__play {
+    position: absolute;
+    left: 18px;
+    bottom: 18px;
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 9px 16px 9px 12px;
+    border: 1px solid rgba(236, 233, 227, 0.28);
+    border-radius: 999px;
+    background: rgba(8, 8, 7, 0.66);
+    backdrop-filter: blur(6px);
+    color: var(--ink);
+    font-size: 10px;
+    letter-spacing: 0.18em;
+    cursor: pointer;
+    transition: border-color 0.35s var(--ease), color 0.35s var(--ease),
+      background 0.35s var(--ease), transform 0.35s var(--ease);
+  }
+  .take__play:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+    transform: translateY(-1px);
+  }
+  .take__play-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--accent);
+  }
+  .take__frame.is-playing .take__play-dot {
+    background: var(--ink);
+  }
+  .take__frame.is-playing .take__play {
+    opacity: 0.42;
+  }
+  .take__frame:hover .take__play {
+    opacity: 1;
   }
 
   .take__scan {

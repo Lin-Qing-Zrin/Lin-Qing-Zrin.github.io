@@ -8,7 +8,7 @@
   --ink-2: #b6b1a8;
   --gray: #79756d;
   --line: rgba(236, 233, 227, 0.15);
-  --accent: #d7ff3f;
+  --accent: #2b52ff;
   --pin: #ff3b1f;
 
   --font-display: "Inter Tight", "Inter", "Noto Sans SC", -apple-system, "Segoe UI",
@@ -190,6 +190,9 @@ p {
   transform: scaleX(0);
   transform-origin: right;
   transition: transform 0.5s var(--ease);
+}
+.nav a:hover {
+  color: var(--accent);
 }
 .nav a:hover::after {
   transform: scaleX(1);
@@ -556,6 +559,7 @@ html.is-ready .line-mask > span {
   font-size: clamp(38px, 8vw, 120px);
   line-height: 1;
   letter-spacing: -0.02em;
+  color: var(--ink);
 }
 .footer-cta:hover {
   color: var(--accent);
@@ -1582,6 +1586,9 @@ html.no-preloader .preloader {
   transform: scaleX(0);
   transform-origin: left;
   transition: transform 0.45s var(--ease);
+}
+.nav a:hover {
+  color: var(--accent);
 }
 .nav a:hover::after {
   transform: scaleX(1);
