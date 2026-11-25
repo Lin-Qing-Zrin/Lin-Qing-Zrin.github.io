@@ -6,7 +6,8 @@ import { defineConfig } from 'astro/config';
 export default defineConfig({
   site: 'https://lin-qing-zrin.github.io',
   build: {
-    inlineStylesheets: 'auto',
+    // 把 CSS 直接内联进 HTML：消除「部署窗口期 HTML 引用了已被删除的哈希 CSS」导致的裸页
+    inlineStylesheets: 'always',
   },
   // 开发工具条会挡住页脚，关掉
   devToolbar: { enabled: false },
