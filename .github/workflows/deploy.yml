@@ -50,3 +50,8 @@ jobs:
     steps:
       - id: deployment
         uses: actions/deploy-pages@v4
+
+      # Pages 偶尔会返回 "Deployment failed, try again later"，补一次重试
+      - id: retry
+        if: failure()
+        uses: actions/deploy-pages@v4
