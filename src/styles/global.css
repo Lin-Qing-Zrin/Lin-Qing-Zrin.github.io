@@ -1198,6 +1198,26 @@ html.is-ready .line-mask > span {
   white-space: pre;
   overflow: hidden;
 }
+/* 数据场流动：每列一条无限滚动的轨道，两半内容首尾相接 */
+.field__col {
+  height: 100%;
+}
+.field__rail {
+  animation: field-flow var(--dur, 36s) linear infinite;
+  animation-direction: var(--dir, normal);
+  animation-delay: var(--delay, 0s);
+  will-change: transform;
+}
+@keyframes field-flow {
+  to {
+    transform: translate3d(0, -50%, 0);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .field__rail {
+    animation: none;
+  }
+}
 @media (max-width: 860px) {
   .field {
     grid-template-columns: repeat(3, minmax(0, 1fr));

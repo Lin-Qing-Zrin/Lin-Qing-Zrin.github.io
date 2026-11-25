@@ -337,32 +337,41 @@ const {
 
         const el = fieldEl;
         const cols = Number(el.dataset.cols || 4);
-        const lines = 56;
-        const data: string[][] = [];
+        const lines = 46;
+        const speeds = [30, 21, 38, 25, 44, 19, 34, 27];
+        const rails: { el: HTMLElement; col: string[] }[] = [];
         el.textContent = '';
 
         for (let c = 0; c < cols; c++) {
-          const span = document.createElement('span');
+          const colEl = document.createElement('span');
+          colEl.className = 'field__col';
+          colEl.style.setProperty('--dur', speeds[c % speeds.length] + 's');
+          colEl.style.setProperty('--dir', 'normal');
+          colEl.style.setProperty('--delay', (-speeds[c % speeds.length] * (0.2 + 0.18 * c)).toFixed(1) + 's');
+
+          const railEl = document.createElement('span');
+          railEl.className = 'field__rail';
           const col: string[] = [];
           for (let l = 0; l < lines; l++) col.push(makeLine(12 + ((Math.random() * 12) | 0)));
-          span.textContent = col.join('\n');
-          el.appendChild(span);
-          data.push(col);
+          /* 两份内容首尾相接，滚动到 -50% 时无缝接回 */
+          railEl.textContent = col.join('\n') + '\n' + col.join('\n');
+
+          colEl.appendChild(railEl);
+          el.appendChild(colEl);
+          rails.push({ el: railEl, col });
         }
 
         if (reduceMotion) return;
 
-        // 每次只搅两行：看起来一直在动，但几乎没有布局开销
+        /* 偶尔换掉一行：流动中带着一点「数据在刷新」的感觉 */
         fieldTimer = window.setInterval(() => {
           if (document.hidden) return;
-          for (let k = 0; k < 2; k++) {
-            const c = (Math.random() * cols) | 0;
-            const col = data[c];
-            const li = (Math.random() * col.length) | 0;
-            col[li] = makeLine(12 + ((Math.random() * 12) | 0));
-            (el.children[c] as HTMLElement).textContent = col.join('\n');
-          }
-        }, 160);
+          const target = rails[(Math.random() * rails.length) | 0];
+          const li = (Math.random() * target.col.length) | 0;
+          target.col[li] = makeLine(12 + ((Math.random() * 12) | 0));
+          const text = target.col.join('\n');
+          target.el.textContent = text + '\n' + text;
+        }, 620);
       }
 
       /* ------------------------------------------------------------
