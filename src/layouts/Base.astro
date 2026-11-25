@@ -48,6 +48,11 @@ const {
     <ClientRouter />
   </head>
   <body>
+    <div class="preloader" data-preloader aria-hidden="true">
+      <span class="preloader__word mono" data-preloader-word>你好</span>
+      <span class="preloader__bar"><span class="preloader__fill"></span></span>
+      <span class="preloader__hint mono">CLICK TO SKIP</span>
+    </div>
     <div class="grain" aria-hidden="true"></div>
       <div class="scrim" aria-hidden="true"></div>
     <div class="veil is-on" data-veil aria-hidden="true"></div>
@@ -503,7 +508,39 @@ const {
          预加载：已移除（访客每次刷新都看到 "Hello" 反而像加载失败）
          ------------------------------------------------------------ */
       function initPreloader() {
-        document.querySelector<HTMLElement>('[data-preloader]')?.remove();
+        const el = document.querySelector<HTMLElement>('[data-preloader]');
+        if (!el) return;
+        if (reduceMotion) {
+          el.remove();
+          return;
+        }
+
+        const word = el.querySelector<HTMLElement>('[data-preloader-word]');
+        const words = ['你好', 'Hello', 'Bonjour', 'नमस्ते', 'Ciao', 'Olá', 'こんにちは', 'Hallå', 'Hallo'];
+        let i = 0;
+        const timer = window.setInterval(() => {
+          i = (i + 1) % words.length;
+          if (word) word.textContent = words[i];
+        }, 88);
+
+        let closed = false;
+        const close = () => {
+          if (closed) return;
+          closed = true;
+          window.clearInterval(timer);
+          window.clearTimeout(fallback);
+          el.classList.add('is-done');
+          window.setTimeout(() => el.remove(), 520);
+          window.removeEventListener('pointerdown', close);
+          window.removeEventListener('keydown', close);
+          window.removeEventListener('wheel', close);
+        };
+
+        const fallback = window.setTimeout(close, 980);
+        el.addEventListener('click', close);
+        window.addEventListener('pointerdown', close);
+        window.addEventListener('keydown', close);
+        window.addEventListener('wheel', close, { passive: true });
       }
 
       /* ------------------------------------------------------------
