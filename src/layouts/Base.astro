@@ -544,7 +544,7 @@ const {
         const timer = window.setInterval(() => {
           i = (i + 1) % words.length;
           if (word) word.textContent = words[i];
-        }, 88);
+        }, 300);
 
         let closed = false;
         const close = () => {
@@ -561,7 +561,7 @@ const {
           window.removeEventListener('wheel', close);
         };
 
-        const fallback = window.setTimeout(close, 980);
+        const fallback = window.setTimeout(close, 1560);
         el.addEventListener('click', close);
         window.addEventListener('pointerdown', close);
         window.addEventListener('keydown', close);

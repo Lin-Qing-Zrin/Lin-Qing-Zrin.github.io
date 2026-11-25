@@ -767,30 +767,8 @@ html.is-ready .line-mask > span {
 }
 
 /* ============================================================
-   Preloader
+   Preloader（真正的定义在文件末尾的「开场」一节）
    ============================================================ */
-.preloader {
-  position: fixed;
-  inset: 0;
-  z-index: 200;
-  background: var(--bg);
-  display: grid;
-  place-items: center;
-  transition: opacity 0.5s var(--ease), visibility 0.5s;
-}
-.preloader.is-done {
-  opacity: 0;
-  visibility: hidden;
-}
-.preloader__word {
-  font-family: var(--font-display);
-  font-size: clamp(28px, 6vw, 64px);
-  letter-spacing: -0.03em;
-  opacity: 0.9;
-}
-html.no-preloader .preloader {
-  display: none;
-}
 
 /* ============================================================
    Instrument layer（等宽读数 / 片边 / 时间码 / 首页两栏）
@@ -2414,15 +2392,15 @@ html.is-locked {
   pointer-events: none;
 }
 .preloader__word {
-  font-size: clamp(13px, 1.1vw, 15px);
-  letter-spacing: 0.42em;
+  font-size: clamp(24px, 2.6vw, 40px);
+  letter-spacing: 0.26em;
   text-transform: none;
-  color: var(--ink);
+  color: #ffffff;
   transform: translateX(0.21em);
 }
 .preloader__bar {
   position: relative;
-  width: 132px;
+  width: 190px;
   height: 1px;
   background: rgba(236, 233, 227, 0.18);
   overflow: hidden;
@@ -2433,7 +2411,7 @@ html.is-locked {
   background: var(--accent);
   transform-origin: left;
   transform: scaleX(0);
-  animation: preload-fill 0.98s cubic-bezier(0.32, 0.72, 0, 1) forwards;
+  animation: preload-fill 1.5s cubic-bezier(0.32, 0.72, 0, 1) forwards;
 }
 @keyframes preload-fill {
   to {
