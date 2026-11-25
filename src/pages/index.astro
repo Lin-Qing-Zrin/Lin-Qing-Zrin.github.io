@@ -1,7 +1,6 @@
 ---
 import Base from '../layouts/Base.astro';
 import Globe from '../components/Globe.astro';
-import Reel from '../components/Reel.astro';
 import Field from '../components/Field.astro';
 import { practice } from '../data/practice';
 ---
@@ -34,11 +33,8 @@ import { practice } from '../data/practice';
         </p>
       </div>
 
-      <div class="hero__reel" data-reveal style="--d:2">
-        <Reel />
-        <div class="hero__signal">
-          <Globe />
-        </div>
+      <div class="hero__globe" data-reveal style="--d:2">
+        <Globe />
       </div>
     </div>
 
