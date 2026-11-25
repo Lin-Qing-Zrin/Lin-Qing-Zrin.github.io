@@ -633,10 +633,11 @@ html.is-ready .line-mask > span {
   opacity: 1;
 }
 .cursor.is-hover {
-  width: 34px;
-  height: 34px;
-  margin: -17px 0 0 -17px;
-  background: var(--accent);
+  width: 30px;
+  height: 30px;
+  margin: -15px 0 0 -15px;
+  background: transparent;
+  border: 1px solid var(--accent);
   mix-blend-mode: normal;
 }
 .cursor.is-label {
@@ -1116,14 +1117,18 @@ html.no-preloader .preloader {
 .veil {
   position: fixed;
   inset: 0;
-  z-index: 80;
+  z-index: 120;
   background: var(--bg);
-  opacity: 0;
+  transform: translateY(101%);
+  transition: transform 0.52s cubic-bezier(0.16, 1, 0.3, 1);
   pointer-events: none;
-  transition: opacity 0.55s var(--ease);
+  will-change: transform;
 }
 .veil.is-on {
-  opacity: 1;
+  transform: translateY(0);
+}
+.veil.is-out {
+  transform: translateY(-101%);
 }
 
 /* HUD：帧号 / 滚动进度 / 悬停目标 */
@@ -2294,13 +2299,18 @@ html.is-locked {
   pointer-events: none;
   opacity: 0;
   transform: translate3d(var(--px, 0px), var(--py, 0px), 0);
-  transition: opacity 0.26s var(--ease);
+  scale: 0.86;
+  filter: blur(3px);
+  transform-origin: 50% 50%;
+  transition: opacity 0.3s var(--ease), scale 0.46s var(--ease), filter 0.46s var(--ease);
   background: #0c0c0b;
   outline: 1px solid rgba(236, 233, 227, 0.14);
-  will-change: transform;
+  will-change: transform, scale;
 }
 .prac-peek.is-on {
   opacity: 1;
+  scale: 1;
+  filter: blur(0);
 }
 .prac-peek__strip {
   display: flex;

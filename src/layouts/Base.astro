@@ -48,14 +48,14 @@ const {
     <ClientRouter />
   </head>
   <body>
-    <div class="preloader" data-preloader aria-hidden="true">
+    <div class="preloader" data-preloader aria-hidden="true" transition:persist="preloader">
       <span class="preloader__word mono" data-preloader-word>你好</span>
       <span class="preloader__bar"><span class="preloader__fill"></span></span>
       <span class="preloader__hint mono">CLICK TO SKIP</span>
     </div>
     <div class="grain" aria-hidden="true"></div>
       <div class="scrim" aria-hidden="true"></div>
-    <div class="veil is-on" data-veil aria-hidden="true"></div>
+    <div class="veil" data-veil aria-hidden="true" transition:persist="veil"></div>
 
     {
       !bare && (
@@ -379,9 +379,30 @@ const {
       function initVeil() {
         const veil = document.querySelector<HTMLElement>('[data-veil]');
         if (!veil) return;
-        requestAnimationFrame(() =>
-          requestAnimationFrame(() => veil.classList.remove('is-on'))
-        );
+        veil.classList.remove('is-on', 'is-out');
+      }
+
+      /* ------------------------------------------------------------
+         换页：黑场从底部升起 → 换页 → 向上抽走
+         ------------------------------------------------------------ */
+      function initRouteTransition() {
+        const W = window as Window & { __rtBound?: boolean };
+        if (W.__rtBound) return;
+        W.__rtBound = true;
+
+        document.addEventListener('astro:before-preparation', () => {
+          const v = document.querySelector<HTMLElement>('[data-veil]');
+          if (!v) return;
+          v.classList.remove('is-out');
+          v.classList.add('is-on');
+        });
+
+        document.addEventListener('astro:after-swap', () => {
+          const v = document.querySelector<HTMLElement>('[data-veil]');
+          if (!v) return;
+          v.classList.add('is-out');
+          window.setTimeout(() => v.classList.remove('is-on', 'is-out'), 560);
+        });
       }
 
       /* ------------------------------------------------------------
@@ -510,8 +531,10 @@ const {
       function initPreloader() {
         const el = document.querySelector<HTMLElement>('[data-preloader]');
         if (!el) return;
+        // 跨页 persist 过的那份已经播完了，别再放一遍
+        if (el.classList.contains('is-done')) return;
         if (reduceMotion) {
-          el.remove();
+          el.style.display = 'none';
           return;
         }
 
@@ -530,7 +553,9 @@ const {
           window.clearInterval(timer);
           window.clearTimeout(fallback);
           el.classList.add('is-done');
-          window.setTimeout(() => el.remove(), 520);
+          window.setTimeout(() => {
+            el.style.display = 'none';
+          }, 520);
           window.removeEventListener('pointerdown', close);
           window.removeEventListener('keydown', close);
           window.removeEventListener('wheel', close);
@@ -689,6 +714,7 @@ const {
         bootMono();
         initFilmProgress();
         initVeil();
+        initRouteTransition();
         initPreview();
         initCursor();
       }
