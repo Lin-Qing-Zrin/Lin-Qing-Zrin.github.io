@@ -707,6 +707,84 @@ const {
         window.addEventListener('resize', apply);
       }
 
+      /* ------------------------------------------------------------
+         片门：指针压到图上时，图往里缩一点、四角裁切标记浮现
+         （CSS 画角标，这里只负责给图打上 .gate 类）
+         ------------------------------------------------------------ */
+      function initGate() {
+        const targets = document.querySelectorAll<HTMLElement>(
+          '.take__frame, .vf-frame, .ps-tile, .id-plate, .case-cover, .gm-cover, .prac-peek__item'
+        );
+        targets.forEach((el) => el.classList.add('gate'));
+      }
+
+      /* ------------------------------------------------------------
+         打字机：小标题逐字打出，中途打错一个再回删
+         只动元素的第一个文本节点，后面的 <span class="cn"> 保持不动
+         ------------------------------------------------------------ */
+      const TYPO = 'abcdefghijklmnopqrstuvwxyz';
+      function typeNode(node: Text, full: string, done: () => void) {
+        let i = 0;
+        let typoAt = Math.max(2, Math.floor(full.length * 0.55) + Math.floor(Math.random() * 3));
+        if (typoAt > full.length - 2) typoAt = -1;
+        node.data = '';
+        const step = () => {
+          if (i < full.length) {
+            node.data = full.slice(0, i + 1);
+            i += 1;
+            if (i === typoAt) {
+              const wrong = TYPO[Math.floor(Math.random() * TYPO.length)];
+              node.data = full.slice(0, i) + wrong;
+              window.setTimeout(() => {
+                node.data = full.slice(0, i);
+                window.setTimeout(step, 110);
+              }, 190);
+              return;
+            }
+            window.setTimeout(step, full[i - 1] === ' ' ? 90 : 46);
+            return;
+          }
+          done();
+        };
+        window.setTimeout(step, 60);
+      }
+
+      function initTypewriter() {
+        const els = Array.from(document.querySelectorAll<HTMLElement>('[data-tw]'));
+        if (!els.length) return;
+        els.forEach((el) => {
+          const first = Array.from(el.childNodes).find(
+            (n): n is Text => n.nodeType === 3 && (n.textContent || '').trim().length > 0
+          );
+          if (!first) return;
+          const full = first.textContent || '';
+          if (!full.trim()) return;
+          el.classList.add('tw');
+          if (reduceMotion) {
+            el.classList.add('is-typed');
+            return;
+          }
+          first.data = '';
+          el.classList.add('is-typing');
+          let ran = false;
+          const io = new IntersectionObserver(
+            (entries) => {
+              entries.forEach((entry) => {
+                if (!entry.isIntersecting || ran) return;
+                ran = true;
+                io.disconnect();
+                typeNode(first, full, () => {
+                  el.classList.remove('is-typing');
+                  el.classList.add('is-typed');
+                });
+              });
+            },
+            { threshold: 0.4 }
+          );
+          io.observe(el);
+        });
+      }
+
       function boot() {
         initPreloader();
         initLenis();
@@ -724,6 +802,8 @@ const {
         initRouteTransition();
         initPreview();
         initCursor();
+        initGate();
+        initTypewriter();
       }
 
       document.addEventListener('astro:page-load', boot);

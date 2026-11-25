@@ -2436,3 +2436,66 @@ html.is-locked {
     transform: translateY(calc(var(--weave, 0px) * 1.8));
   }
 }
+
+/* ============================================================
+   片门：hover 时图往里缩一点，四角裁切标记浮现
+   ============================================================ */
+.gate {
+  position: relative;
+}
+.gate::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.28s var(--ease), inset 0.42s var(--ease);
+  background-image:
+    linear-gradient(var(--ink), var(--ink)), linear-gradient(var(--ink), var(--ink)),
+    linear-gradient(var(--ink), var(--ink)), linear-gradient(var(--ink), var(--ink)),
+    linear-gradient(var(--ink), var(--ink)), linear-gradient(var(--ink), var(--ink)),
+    linear-gradient(var(--ink), var(--ink)), linear-gradient(var(--ink), var(--ink));
+  background-repeat: no-repeat;
+  background-size: 14px 1px, 1px 14px, 14px 1px, 1px 14px, 14px 1px, 1px 14px, 14px 1px, 1px 14px;
+  background-position: left top, left top, right top, right top, left bottom, left bottom, right bottom, right bottom;
+}
+.gate img,
+.gate video {
+  transition: transform 0.5s var(--ease);
+}
+@media (hover: hover) {
+  .gate:hover::after {
+    opacity: 0.8;
+    inset: 10px;
+  }
+  .gate:hover img,
+  .gate:hover video {
+    transform: scale(0.985);
+  }
+}
+
+/* ============================================================
+   打字机小标题
+   ============================================================ */
+.tw .cn {
+  opacity: 0.25;
+  transition: opacity 0.5s var(--ease) 0.1s;
+}
+.tw.is-typed .cn {
+  opacity: 1;
+}
+.tw.is-typing::after {
+  content: "";
+  display: inline-block;
+  width: 0.5em;
+  height: 1px;
+  margin-left: 2px;
+  vertical-align: baseline;
+  background: var(--accent);
+  animation: tw-blink 0.9s steps(2, start) infinite;
+}
+@keyframes tw-blink {
+  to {
+    visibility: hidden;
+  }
+}
