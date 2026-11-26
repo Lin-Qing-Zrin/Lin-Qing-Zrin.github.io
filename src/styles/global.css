@@ -2519,3 +2519,125 @@ html.is-locked {
     visibility: hidden;
   }
 }
+
+/* ============================================================
+   彩蛋层（/secrets）
+   ============================================================ */
+.raw-tag {
+  position: fixed;
+  left: var(--pad);
+  top: 78px;
+  z-index: 45;
+  font-size: 9px;
+  letter-spacing: 0.18em;
+  color: var(--accent);
+  background: rgba(12, 12, 12, 0.72);
+  padding: 4px 8px;
+  border: 1px solid rgba(43, 82, 255, 0.5);
+  opacity: 0;
+  transform: translateY(-4px);
+  transition: opacity 0.3s var(--ease), transform 0.3s var(--ease);
+  pointer-events: none;
+}
+html.is-raw .raw-tag {
+  opacity: 1;
+  transform: none;
+}
+html.is-raw img,
+html.is-raw video,
+html.is-raw canvas {
+  filter: grayscale(1) contrast(1.06) brightness(0.96);
+  transition: filter 0.45s var(--ease);
+}
+
+/* 页脚跑马灯：按一下停住，露出一行压着的说明 */
+.ticker {
+  cursor: pointer;
+}
+.ticker__note {
+  max-height: 0;
+  overflow: hidden;
+  opacity: 0;
+  margin: 0;
+  padding: 0 var(--pad);
+  font-size: 11px;
+  line-height: 1.8;
+  letter-spacing: 0.04em;
+  color: var(--ink-2);
+  transition: max-height 0.5s var(--ease), opacity 0.4s var(--ease), padding 0.5s var(--ease);
+}
+.site-footer.is-open .ticker__note {
+  max-height: 160px;
+  opacity: 1;
+  padding: 22px var(--pad) 30px;
+}
+.site-footer.is-open .ticker__track {
+  animation-play-state: paused;
+}
+
+/* /secrets 列表 */
+.sec-list {
+  margin-top: clamp(40px, 6vw, 76px);
+  border-top: 1px solid var(--line);
+}
+.sec-row {
+  display: grid;
+  grid-template-columns: 48px minmax(0, 1fr) minmax(0, 0.9fr) 24px;
+  align-items: baseline;
+  gap: clamp(12px, 2vw, 28px);
+  padding: 22px 0;
+  border-bottom: 1px solid var(--line);
+  transition: opacity 0.3s var(--ease);
+}
+.sec-row__idx {
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  color: var(--gray);
+}
+.sec-row__title {
+  font-family: var(--font-serif);
+  font-weight: 900;
+  font-size: clamp(22px, 2.4vw, 34px);
+  letter-spacing: 0.01em;
+  color: var(--ink-2);
+  transition: color 0.3s var(--ease);
+}
+.sec-row__hint {
+  font-size: 11px;
+  line-height: 1.7;
+  letter-spacing: 0.03em;
+  color: var(--gray);
+}
+.sec-row__state {
+  font-size: 12px;
+  color: var(--gray);
+  text-align: right;
+  transition: color 0.3s var(--ease);
+}
+.sec-row.is-found .sec-row__title {
+  color: var(--ink);
+}
+.sec-row.is-found .sec-row__state {
+  color: var(--accent);
+}
+.sec-row.is-found .sec-row__hint {
+  color: var(--ink-2);
+}
+
+.sec-final {
+  margin-top: clamp(36px, 5vw, 60px);
+  padding-top: 24px;
+  border-top: 1px solid var(--line);
+  opacity: 0;
+  transform: translateY(10px);
+  transition: opacity 0.6s var(--ease), transform 0.6s var(--ease);
+  pointer-events: none;
+}
+.sec-final.is-on {
+  opacity: 1;
+  transform: none;
+}
+.sec-reset {
+  margin-top: 40px;
+  padding-bottom: clamp(80px, 10vw, 140px);
+}

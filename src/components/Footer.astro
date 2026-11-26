@@ -1,5 +1,5 @@
 <footer class="site-footer">
-  <div class="ticker" aria-hidden="true">
+  <div class="ticker" data-ticker role="button" tabindex="0" aria-label="按一下，让这行字停下">
     <div class="ticker__track">
       {
         [0, 1].map(() => (
@@ -21,6 +21,10 @@
       }
     </div>
   </div>
+
+  <p class="ticker__note mono" data-ticker-note>
+    全部一个人做完：分镜、建模、灯光、剪辑、调色、上传。这部 MV 剪了 11 天，音乐是倒着贴上去的。
+  </p>
 
   <div class="wrap">
     <a class="footer-cta" href="/contact/" data-cursor="hover" data-reveal aria-label="Let’s work together.">
@@ -68,6 +72,9 @@
         <ul>
           <li>Version 2026 © 刘启征</li>
           <li>Local time <span data-clock>—</span></li>
+          <li>
+            <a class="link-u" href="/secrets/" data-cursor="hover">Secrets 彩蛋</a>
+          </li>
         </ul>
       </div>
     </div>

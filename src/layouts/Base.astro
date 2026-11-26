@@ -55,6 +55,7 @@ const {
     </div>
     <div class="grain" aria-hidden="true"></div>
       <div class="scrim" aria-hidden="true"></div>
+    <div class="raw-tag mono" aria-hidden="true">RAW · UNGRADED</div>
     <div class="veil" data-veil aria-hidden="true" transition:persist="veil"></div>
 
     {
@@ -613,6 +614,7 @@ const {
             if (frozen) {
               tcFrozenAt = performance.now() - tcStart;
               cancelAnimationFrame(tcRaf);
+              (window as Window & { dsFound?: (id: string) => void }).dsFound?.('tc');
             } else {
               tcStart = performance.now() - tcFrozenAt;
               run();
@@ -794,8 +796,116 @@ const {
         });
       }
 
+      /* ------------------------------------------------------------
+         彩蛋：/secrets 的记账本
+         - 找到的条目存在 localStorage（只在本地，不联网）
+         - 任何地方发现彩蛋都调 window.dsFound('id')
+         ------------------------------------------------------------ */
+      const FOUND_KEY = 'lqz.found';
+      const readFound = (): string[] => {
+        try {
+          const raw = localStorage.getItem(FOUND_KEY);
+          return raw ? (JSON.parse(raw) as string[]) : [];
+        } catch {
+          return [];
+        }
+      };
+      const writeFound = (list: string[]) => {
+        try {
+          localStorage.setItem(FOUND_KEY, JSON.stringify(list));
+        } catch {
+          /* 隐私模式下写不进去就算了 */
+        }
+      };
+      const markFound = (id: string) => {
+        const list = readFound();
+        if (list.includes(id)) return;
+        list.push(id);
+        writeFound(list);
+        document.dispatchEvent(new CustomEvent('ds:found', { detail: { id, count: list.length } }));
+      };
+      (window as Window & { dsFound?: typeof markFound; dsReadFound?: typeof readFound }).dsFound =
+        markFound;
+      (window as Window & { dsReadFound?: typeof readFound }).dsReadFound = readFound;
+
+      /* ------------------------------------------------------------
+         控制台留言：按 F12 的人才会看到
+         ------------------------------------------------------------ */
+      function initConsoleNote() {
+        if ((window as Window & { __cNote?: boolean }).__cNote) return;
+        (window as Window & { __cNote?: boolean }).__cNote = true;
+        const big = 'font: 600 42px/1.1 "Noto Serif SC", serif; color:#ece9e3;';
+        const small = 'font: 400 12px/1.7 ui-monospace, monospace; color:#8a8a86;';
+        const acc = 'font: 500 12px/1.7 ui-monospace, monospace; color:#2b52ff;';
+        console.log('%c刘启征', big);
+        console.log('%cFILM · GAME · VFX · SELF-MEDIA', small);
+        console.log('%c', 'font-size:0');
+        console.log('%c你打开了控制台。这里通常没人来。', small);
+        console.log('%c这站有五样东西不在导航里 —— 想自己找：《 /secrets 》', acc);
+        console.log('%c先送你一个：在任意页面连续按下 l、q、z。', acc);
+      }
+
+      /* ------------------------------------------------------------
+         彩蛋：连打 l q z → 毛片模式（全站去色，露出未调色的样子）
+         再打一次或按 Esc 退出
+         ------------------------------------------------------------ */
+      function initRawMode() {
+        let buffer = '';
+        let bound = (window as Window & { __rawBound?: boolean }).__rawBound;
+        if (bound) return;
+        (window as Window & { __rawBound?: boolean }).__rawBound = true;
+
+        const toggle = (on?: boolean) => {
+          const root = document.documentElement;
+          const next = on ?? !root.classList.contains('is-raw');
+          root.classList.toggle('is-raw', next);
+          if (next) markFound('raw');
+        };
+
+        window.addEventListener('keydown', (e) => {
+          if (e.key === 'Escape') {
+            document.documentElement.classList.remove('is-raw');
+            return;
+          }
+          if (e.metaKey || e.ctrlKey || e.altKey) return;
+          if (e.key.length !== 1) return;
+          buffer = (buffer + e.key.toLowerCase()).slice(-3);
+          if (buffer === 'lqz') {
+            buffer = '';
+            toggle();
+          }
+        });
+      }
+
+      /* ------------------------------------------------------------
+         彩蛋：点一下页脚跑马灯 → 停住，露出一行压着的说明
+         ------------------------------------------------------------ */
+      function initTickerNote() {
+        const footer = document.querySelector<HTMLElement>('.site-footer');
+        const ticker = document.querySelector<HTMLElement>('[data-ticker]');
+        if (!footer || !ticker || ticker.dataset.bound) return;
+        ticker.dataset.bound = '1';
+
+        const toggle = () => {
+          const open = footer.classList.toggle('is-open');
+          ticker.setAttribute('aria-pressed', String(open));
+          if (open) markFound('note');
+        };
+
+        ticker.addEventListener('click', toggle);
+        ticker.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            toggle();
+          }
+        });
+      }
+
       function boot() {
         initPreloader();
+        initConsoleNote();
+        initRawMode();
+        initTickerNote();
         initLenis();
         initHero();
         initReveal();

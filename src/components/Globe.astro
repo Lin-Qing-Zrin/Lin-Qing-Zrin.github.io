@@ -311,8 +311,14 @@ const pin = { lon: 120.5853, lat: 31.2989, label: 'Suzhou' };
 
     const drawPin = (t: number) => {
       const p = project(pinLon, pinLat);
-      if (p.z <= 0.02) return;
+      if (p.z <= 0.02) {
+        pinScreen = null;
+        return;
+      }
       const { sx, sy } = toScreen(p.x, p.y);
+      pinScreen = { x: sx, y: sy };
+      /* 供命中测试与调试：画布内的 CSS 像素坐标 */
+      el.dataset.pin = `${sx.toFixed(1)},${sy.toFixed(1)}`;
       const pulse = reduce ? 0 : (Math.sin(t / 620) + 1) / 2;
       ctx.beginPath();
       ctx.arc(sx, sy, 3.2, 0, Math.PI * 2);
@@ -420,21 +426,40 @@ const pin = { lon: 120.5853, lat: 31.2989, label: 'Suzhou' };
     let lastX = 0;
     let lastY = 0;
     let vx = 0;
+    let moved = 0;
+    let pinScreen: { x: number; y: number } | null = null;
     const frame = el.querySelector<HTMLElement>('.globe__frame')!;
 
+    /* 那盏红点不是装饰：转到它、并且点它，会去 About */
+    const nearPin = (e: PointerEvent) => {
+      if (!pinScreen) return false;
+      const r = canvas.getBoundingClientRect();
+      const cssX = (e.clientX - r.left) * (w / r.width);
+      const cssY = (e.clientY - r.top) * (h / r.height);
+      return Math.hypot(cssX - pinScreen.x, cssY - pinScreen.y) < 16;
+    };
+
     frame.addEventListener('pointerenter', () => (state.hover = true));
-    frame.addEventListener('pointerleave', () => (state.hover = false));
+    frame.addEventListener('pointerleave', () => {
+      state.hover = false;
+      frame.dataset.cursor = 'Drag';
+    });
     frame.addEventListener('pointerdown', (e) => {
       state.dragging = true;
+      moved = 0;
       lastX = e.clientX;
       lastY = e.clientY;
       vx = 0;
       frame.setPointerCapture(e.pointerId);
     });
     frame.addEventListener('pointermove', (e) => {
-      if (!state.dragging) return;
+      if (!state.dragging) {
+        frame.dataset.cursor = nearPin(e) ? 'Open' : 'Drag';
+        return;
+      }
       const dx = e.clientX - lastX;
       const dy = e.clientY - lastY;
+      moved += Math.abs(dx) + Math.abs(dy);
       lastX = e.clientX;
       lastY = e.clientY;
       state.lon0 -= dx * 0.3;
@@ -446,6 +471,10 @@ const pin = { lon: 120.5853, lat: 31.2989, label: 'Suzhou' };
       state.dragging = false;
       state.vel = vx;
       if (frame.hasPointerCapture(e.pointerId)) frame.releasePointerCapture(e.pointerId);
+      if (moved < 6 && nearPin(e)) {
+        (window as Window & { dsFound?: (id: string) => void }).dsFound?.('pin');
+        window.location.href = '/about/';
+      }
     };
     frame.addEventListener('pointerup', endDrag);
     frame.addEventListener('pointercancel', endDrag);
