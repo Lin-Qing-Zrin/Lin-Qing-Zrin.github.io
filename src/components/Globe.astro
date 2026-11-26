@@ -63,6 +63,66 @@ const pin = { lon: 120.5853, lat: 31.2989, label: 'Suzhou' };
   const DEG = Math.PI / 180;
   const rings = (land as { rings: number[][][] }).rings;
 
+  /* ------------------------------------------------------------
+     把 110m 海岸线栅格化成一圈「点」——干净、可批量画、还能做晨昏
+     （扫描线填充：每一条纬线求与所有边的交点，排序后成对填）
+     ------------------------------------------------------------ */
+  type LandGrid = { lons: Float32Array; lats: Float32Array; cities: Uint8Array };
+  let gridCache: LandGrid | null = null;
+
+  function buildGrid(step = 3): LandGrid {
+    if (gridCache) return gridCache;
+    const latMin = -78;
+    const latMax = 80;
+    const rows = Math.round((latMax - latMin) / step);
+
+    const lons: number[] = [];
+    const lats: number[] = [];
+    for (let i = 0; i < rows; i++) {
+      const lat = latMin + (i + 0.5) * step;
+      const xs: number[] = [];
+      for (const ring of rings) {
+        for (let k = 0; k < ring.length - 1; k++) {
+          const x1 = ring[k][0];
+          const y1 = ring[k][1];
+          const x2 = ring[k + 1][0];
+          const y2 = ring[k + 1][1];
+          if (y1 > lat !== y2 > lat) {
+            xs.push(x1 + ((lat - y1) / (y2 - y1)) * (x2 - x1));
+          }
+        }
+      }
+      if (xs.length < 2) continue;
+      xs.sort((a, b) => a - b);
+      /* 经度步长按纬度缩放：赤道稀、极地密，投影出来才是均匀的等距点 */
+      const lonStep = step / Math.max(Math.cos(lat * DEG), 0.26);
+      for (let m = 0; m + 1 < xs.length; m += 2) {
+        const a = Math.max(-180, xs[m]);
+        const b = Math.min(180, xs[m + 1]);
+        if (b <= a) continue;
+        let lon = Math.ceil(a / lonStep) * lonStep;
+        for (; lon <= b; lon += lonStep) {
+          lons.push(lon);
+          lats.push(lat);
+        }
+      }
+    }
+
+    const lonsArr = Float32Array.from(lons);
+    const latsArr = Float32Array.from(lats);
+    const cities = new Uint8Array(lonsArr.length);
+    /* 固定的伪随机：每次刷新亮起来的城市是同一批 */
+    let seed = 20261125;
+    const rnd = () => {
+      seed = (seed * 1664525 + 1013904223) % 4294967296;
+      return seed / 4294967296;
+    };
+    for (let i = 0; i < cities.length; i++) cities[i] = rnd() < 0.055 ? 1 : 0;
+
+    gridCache = { lons: lonsArr, lats: latsArr, cities };
+    return gridCache;
+  }
+
   type Setup = { el: HTMLElement; run: () => void; stop: () => void };
 
   function boot() {
@@ -122,11 +182,10 @@ const pin = { lon: 120.5853, lat: 31.2989, label: 'Suzhou' };
       sy: h / 2 - y * r,
     });
 
-    // 只描海岸线：正交投影下多边形填充会在球缘产生横切色带，
-    // 线框反而更干净，也更贴合「仪器」的视觉语言
+    // 只描海岸线（很淡，主要靠点阵认形）
     const drawLand = () => {
-      ctx.strokeStyle = 'rgba(88, 82, 72, 0.62)';
-      ctx.lineWidth = 0.7;
+      ctx.strokeStyle = 'rgba(88, 82, 72, 0.3)';
+      ctx.lineWidth = 0.6;
       ctx.beginPath();
       for (const ring of rings) {
         let open = false;
@@ -146,6 +205,63 @@ const pin = { lon: 120.5853, lat: 31.2989, label: 'Suzhou' };
         }
       }
       ctx.stroke();
+    };
+
+    /* 点阵大陆 + 晨昏：受光面是墨点，背面是暗点，少数城市在夜里亮着 */
+    const LIGHT = (() => {
+      const lx = -0.46;
+      const ly = 0.58;
+      const lz = 0.67;
+      const n = Math.hypot(lx, ly, lz);
+      return { x: lx / n, y: ly / n, z: lz / n };
+    })();
+
+    const drawDots = (t: number) => {
+      const grid = buildGrid();
+      const { lons, lats, cities } = grid;
+      const shadow: number[] = [];
+      const day: number[] = [];
+      const night: number[] = [];
+      for (let i = 0; i < lons.length; i++) {
+        const p = project(lons[i], lats[i]);
+        if (p.z <= 0.02) continue;
+        const lit = p.x * LIGHT.x + p.y * LIGHT.y + p.z * LIGHT.z;
+        const { sx, sy } = toScreen(p.x, p.y);
+        const size = 1.15 + p.z * 0.85;
+        if (lit > 0.05) day.push(sx, sy, size);
+        else {
+          if (cities[i]) night.push(sx, sy, size);
+          else shadow.push(sx, sy, size);
+        }
+      }
+
+      const fillRects = (arr: number[], color: string) => {
+        if (!arr.length) return;
+        ctx.beginPath();
+        for (let k = 0; k < arr.length; k += 3) {
+          const s = arr[k + 2];
+          ctx.rect(arr[k] - s / 2, arr[k + 1] - s / 2, s, s);
+        }
+        ctx.fillStyle = color;
+        ctx.fill();
+      };
+
+      /* 夜面：暗一点的点，让晨昏线自己长出来 */
+      fillRects(shadow, 'rgba(66, 60, 50, 0.34)');
+      /* 受光面：墨点 */
+      fillRects(day, 'rgba(66, 60, 50, 0.68)');
+
+      /* 夜面城市：暖色，带一点呼吸 */
+      if (night.length) {
+        const breathe = reduce ? 0 : (Math.sin(t / 900) + 1) / 2;
+        fillRects(night, `rgba(255, 176, 96, ${0.5 + breathe * 0.18})`);
+        ctx.beginPath();
+        for (let k = 0; k < night.length; k += 3) {
+          ctx.rect(night[k] - 2.2, night[k + 1] - 2.2, 4.4, 4.4);
+        }
+        ctx.fillStyle = `rgba(255, 176, 96, ${0.05 + breathe * 0.05})`;
+        ctx.fill();
+      }
     };
 
     const drawGraticule = () => {
@@ -226,6 +342,20 @@ const pin = { lon: 120.5853, lat: 31.2989, label: 'Suzhou' };
       ctx.beginPath();
       ctx.arc(w / 2, h / 2, r, 0, Math.PI * 2);
       ctx.clip();
+
+      drawDots(t);
+
+      // 晨昏线：受光侧留白，背光侧压一层极淡的暗
+      const litX = w / 2 + LIGHT.x * r;
+      const litY = h / 2 - LIGHT.y * r;
+      const term = ctx.createLinearGradient(litX, litY, w - litX, h - litY);
+      term.addColorStop(0, 'rgba(20, 18, 14, 0)');
+      term.addColorStop(0.55, 'rgba(20, 18, 14, 0.02)');
+      term.addColorStop(1, 'rgba(20, 18, 14, 0.2)');
+      ctx.fillStyle = term;
+      ctx.beginPath();
+      ctx.arc(w / 2, h / 2, r, 0, Math.PI * 2);
+      ctx.fill();
 
       drawLand();
       drawGraticule();
