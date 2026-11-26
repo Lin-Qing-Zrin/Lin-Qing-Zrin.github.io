@@ -70,7 +70,7 @@ const pin = { lon: 120.5853, lat: 31.2989, label: 'Suzhou' };
   type LandGrid = { lons: Float32Array; lats: Float32Array; cities: Uint8Array };
   let gridCache: LandGrid | null = null;
 
-  function buildGrid(step = 3): LandGrid {
+  function buildGrid(step = 2.4): LandGrid {
     if (gridCache) return gridCache;
     const latMin = -78;
     const latMax = 80;
@@ -96,11 +96,13 @@ const pin = { lon: 120.5853, lat: 31.2989, label: 'Suzhou' };
       xs.sort((a, b) => a - b);
       /* 经度步长按纬度缩放：赤道稀、极地密，投影出来才是均匀的等距点 */
       const lonStep = step / Math.max(Math.cos(lat * DEG), 0.26);
+      /* 每行错开半格，避免所有纬线对齐成竖条 */
+      const phase = (((Math.sin(i * 12.9898) * 43758.5453) % 1) + 1) % 1;
       for (let m = 0; m + 1 < xs.length; m += 2) {
         const a = Math.max(-180, xs[m]);
         const b = Math.min(180, xs[m + 1]);
         if (b <= a) continue;
-        let lon = Math.ceil(a / lonStep) * lonStep;
+        let lon = Math.ceil(a / lonStep - phase) * lonStep + phase * lonStep;
         for (; lon <= b; lon += lonStep) {
           lons.push(lon);
           lats.push(lat);
@@ -227,7 +229,7 @@ const pin = { lon: 120.5853, lat: 31.2989, label: 'Suzhou' };
         if (p.z <= 0.02) continue;
         const lit = p.x * LIGHT.x + p.y * LIGHT.y + p.z * LIGHT.z;
         const { sx, sy } = toScreen(p.x, p.y);
-        const size = 1.15 + p.z * 0.85;
+        const size = 1.0 + p.z * 0.8;
         if (lit > 0.05) day.push(sx, sy, size);
         else {
           if (cities[i]) night.push(sx, sy, size);
@@ -247,7 +249,7 @@ const pin = { lon: 120.5853, lat: 31.2989, label: 'Suzhou' };
       };
 
       /* 夜面：暗一点的点，让晨昏线自己长出来 */
-      fillRects(shadow, 'rgba(66, 60, 50, 0.34)');
+      fillRects(shadow, 'rgba(66, 60, 50, 0.4)');
       /* 受光面：墨点 */
       fillRects(day, 'rgba(66, 60, 50, 0.68)');
 
