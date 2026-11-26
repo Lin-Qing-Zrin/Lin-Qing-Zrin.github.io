@@ -229,9 +229,23 @@ const {
       }
 
       function initHero() {
-        requestAnimationFrame(() =>
-          requestAnimationFrame(() => document.documentElement.classList.add('is-ready'))
-        );
+        const arm = () =>
+          requestAnimationFrame(() =>
+            requestAnimationFrame(() => document.documentElement.classList.add('is-ready'))
+          );
+        const pre = document.querySelector<HTMLElement>('[data-preloader]');
+        // 开场还在放的时候不要先播名字的入场——否则全部藏在黑场后面，像没做
+        const pending =
+          pre && !pre.classList.contains('is-done') && !reduceMotion && pre.style.display !== 'none';
+        if (!pending) {
+          arm();
+          return;
+        }
+        const once = () => {
+          document.removeEventListener('ds:preloaded', once);
+          arm();
+        };
+        document.addEventListener('ds:preloaded', once);
       }
 
       /* ------------------------------------------------------------
@@ -551,6 +565,8 @@ const {
         const word = el.querySelector<HTMLElement>('[data-preloader-word]');
         const words = ['你好', 'Hello', 'Bonjour', 'नमस्ते', 'Ciao', 'Olá', 'こんにちは', 'Hallå', 'Hallo'];
         let i = 0;
+        /* 页面本身启动就很慢时（弱网/冷缓存），别再让访客多等一次问候 */
+        const bootLate = performance.now() > 2600;
         const timer = window.setInterval(() => {
           i = (i + 1) % words.length;
           if (word) word.textContent = words[i];
@@ -565,13 +581,15 @@ const {
           el.classList.add('is-done');
           window.setTimeout(() => {
             el.style.display = 'none';
+            // 黑场彻底散了，再让名字入场——否则动画藏在这层后面
+            document.dispatchEvent(new Event('ds:preloaded'));
           }, 520);
           window.removeEventListener('pointerdown', close);
           window.removeEventListener('keydown', close);
           window.removeEventListener('wheel', close);
         };
 
-        const fallback = window.setTimeout(close, 1560);
+        const fallback = window.setTimeout(close, bootLate ? 420 : 1560);
         el.addEventListener('click', close);
         window.addEventListener('pointerdown', close);
         window.addEventListener('keydown', close);
