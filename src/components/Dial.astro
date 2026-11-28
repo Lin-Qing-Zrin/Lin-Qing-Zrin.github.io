@@ -40,9 +40,9 @@ const terms: Term[] = [
     </div>
   </div>
   <figcaption class="dial__cap">
-    <span class="mono">Solar term · <time data-dial-date title="Today · UTC+08:00">——</time></span>
+    <span class="mono">Solar term</span>
     <span class="mono dial__where">小满 · 5.21</span>
-    <span class="mono dial__today" data-today>今天 · ——</span>
+    <span class="mono dial__today">今天 · <span data-today>——</span> <time class="dial__date" data-dial-date title="Today · UTC+08:00">——</time></span>
   </figcaption>
 </figure>
 
@@ -145,7 +145,7 @@ const terms: Term[] = [
         current = t;
       }
     }
-    if (todayEl) todayEl.textContent = `今天 · ${current.name}`;
+    if (todayEl) todayEl.textContent = current.name;
     window.dispatchEvent(new CustomEvent('dial:today', { detail: { name: current.name } }));
 
     const ctx = canvas.getContext('2d');

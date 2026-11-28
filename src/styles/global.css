@@ -2673,3 +2673,16 @@ body:has(.cat-list) .hud__target { transition: none; transform: none; }
   .cat-list .cat-row__en,
   body:has(.cat-list) .hud__target { transform: none !important; transition: none !important; }
 }
+/* 键盘焦点：用站内语言（强调色 + 双线）替代浏览器默认方框 */
+.cat-list .cat-row:focus { outline: none; }
+.cat-list .cat-row:focus-visible { outline: none; }
+.cat-list .cat-row:focus-visible .cat-row__en { color: var(--accent); }
+.cat-list .cat-row:focus-visible .cat-row__no { color: var(--accent); }
+.cat-list .cat-row:focus-visible .cat-row__open { color: var(--accent); }
+.cat-list .cat-row:focus-visible { border-top-color: var(--accent); }
+.cat-list .cat-row:focus-visible + .cat-row { border-top-color: var(--accent); }
+.dial__date {
+  color: var(--gray);
+  font-variant-numeric: tabular-nums;
+}
+.dial__date::before { content: "· "; }
