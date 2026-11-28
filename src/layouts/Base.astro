@@ -288,6 +288,15 @@ const {
               .formatToParts(now)
               .find((p) => p.type === 'timeZoneName')?.value ?? '';
           nodes.forEach((n) => rollTo(n, `${time} ${tz}`));
+          // 日期与站点时钟同属 UTC+08；复用时钟刷新，不增加动画或计时器。
+          const date = new Intl.DateTimeFormat('en-CA', {
+            timeZone: 'Asia/Shanghai', year: 'numeric', month: '2-digit', day: '2-digit',
+          }).format(now);
+          document.querySelectorAll<HTMLTimeElement>('[data-dial-date]').forEach((el) => {
+            el.dateTime = date;
+            el.textContent = date.slice(5).replace('-', '.');
+            el.setAttribute('aria-label', `Today ${date} · UTC+08:00`);
+          });
         };
         tick();
         window.setInterval(tick, 1000 * 20);
@@ -311,6 +320,33 @@ const {
         hudTarget.classList.toggle('is-on', Boolean(text));
       }
 
+      // 分类目录：保留原生链接与 Tab 顺序，只在目录内处理方向键。
+      function initCategoryKeys() {
+        const list = document.querySelector<HTMLElement>('.cat-list');
+        if (!list || list.dataset.keysBound) return;
+        list.dataset.keysBound = 'true';
+        const rows = Array.from(list.querySelectorAll<HTMLAnchorElement>('a[href]:not([aria-disabled="true"])'));
+        list.addEventListener('focusin', (e) => {
+          const row = (e.target as Element).closest<HTMLAnchorElement>('.cat-row');
+          if (!row || !rows.includes(row)) return;
+          const label = ['.cat-row__no', '.cat-row__en', '.cat-row__meta']
+            .map((selector) => row.querySelector(selector)?.textContent?.trim()).filter(Boolean);
+          setHudTarget(label.join(' / '));
+          row.classList.add('is-in');
+        });
+        list.addEventListener('focusout', (e) => {
+          if (!(e.relatedTarget instanceof Node) || !list.contains(e.relatedTarget)) setHudTarget('');
+        });
+        list.addEventListener('keydown', (e) => {
+          if (e.altKey || e.ctrlKey || e.metaKey || e.shiftKey) return;
+          const index = rows.indexOf(document.activeElement as HTMLAnchorElement);
+          if (index < 0 || !['ArrowDown', 'ArrowUp', 'Home', 'End'].includes(e.key)) return;
+          e.preventDefault();
+          const next = e.key === 'Home' ? 0 : e.key === 'End' ? rows.length - 1
+            : Math.max(0, Math.min(rows.length - 1, index + (e.key === 'ArrowDown' ? 1 : -1)));
+          rows[next].focus();
+        });
+      }
       function initHud() {
         hudFrame = document.querySelector<HTMLElement>('[data-hud-frame]');
         hudScroll = document.querySelector<HTMLElement>('[data-hud-scroll]');
@@ -930,6 +966,7 @@ const {
         initClock();
         initTimecode();
         initHud();
+        initCategoryKeys();
         initField();
         initGhosts();
         initMagnetic();

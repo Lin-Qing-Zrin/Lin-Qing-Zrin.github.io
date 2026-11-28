@@ -2662,3 +2662,27 @@ html.is-raw canvas {
     letter-spacing: 0.1em;
   }
 }
+/* 键盘选中项：即时 opacity 提示；不改配色，不增加运动。 */
+.cat-list:focus-within .cat-row[href]:not(:focus) { opacity: 0.55; }
+.cat-list .cat-row:focus { opacity: 1; transform: none; transition: none; }
+.cat-list:focus-within .cat-row,
+.cat-list .cat-row:focus .cat-row__en { transition: none; }
+body:has(.cat-list) .hud__target { transition: none; transform: none; }
+@media (prefers-reduced-motion: reduce) {
+  .cat-list .cat-row,
+  .cat-list .cat-row__en,
+  body:has(.cat-list) .hud__target { transform: none !important; transition: none !important; }
+}
+/* 键盘焦点：用站内语言（强调色 + 双线）替代浏览器默认方框 */
+.cat-list .cat-row:focus { outline: none; }
+.cat-list .cat-row:focus-visible { outline: none; }
+.cat-list .cat-row:focus-visible .cat-row__en { color: var(--accent); }
+.cat-list .cat-row:focus-visible .cat-row__no { color: var(--accent); }
+.cat-list .cat-row:focus-visible .cat-row__open { color: var(--accent); }
+.cat-list .cat-row:focus-visible { border-top-color: var(--accent); }
+.cat-list .cat-row:focus-visible + .cat-row { border-top-color: var(--accent); }
+.dial__date {
+  color: var(--gray);
+  font-variant-numeric: tabular-nums;
+}
+.dial__date::before { content: "· "; }
