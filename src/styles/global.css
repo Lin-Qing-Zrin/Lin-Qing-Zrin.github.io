@@ -2641,3 +2641,24 @@ html.is-raw canvas {
   margin-top: 40px;
   padding-bottom: clamp(80px, 10vw, 140px);
 }
+/* 网名：Tupo_ 作为小标，小满仍是主角 */
+.hero__tag {
+  margin: 0 0 2px;
+  font-size: 11px;
+  letter-spacing: 0.44em;
+  color: var(--gray);
+  text-transform: uppercase;
+}
+.hero__motto {
+  margin: 8px 0 16px;
+  font-family: var(--font-serif);
+  font-weight: 500;
+  font-size: clamp(12px, 1.02vw, 15px);
+  letter-spacing: 0.16em;
+  color: var(--ink-2);
+}
+@media (max-width: 700px) {
+  .hero__motto {
+    letter-spacing: 0.1em;
+  }
+}

@@ -1,6 +1,6 @@
 ---
 import Base from '../layouts/Base.astro';
-import Globe from '../components/Globe.astro';
+import Dial from '../components/Dial.astro';
 import Field from '../components/Field.astro';
 import { practice } from '../data/practice';
 ---
@@ -15,14 +15,20 @@ import { practice } from '../data/practice';
           <p class="mono" data-boot>Film · Game · VFX · Self-media</p>
         </div>
 
+        <p class="hero__tag mono" data-reveal>Tupo_</p>
+
         <h1 class="t-display hero__name" data-cursor="hover">
           <span class="line-mask"
             ><span style="--i:0" data-namefx
-              ><span class="fx-ch">刘</span><span class="fx-ch">启</span><span class="fx-ch">征</span></span
+              ><span class="fx-ch">小</span><span class="fx-ch">满</span></span
             ></span
           >
-          <span class="hero__fill" aria-hidden="true">刘启征</span>
+          <span class="hero__fill" aria-hidden="true">小满</span>
         </h1>
+
+        <p class="hero__motto" data-reveal style="--d:1">
+          何须多虑盈亏事，终归小满胜完全
+        </p>
 
         <p class="hero__lede-s" data-reveal style="--d:1">
           Short films, game levels and VFX — written, built and cut by one person. AI where
@@ -34,7 +40,7 @@ import { practice } from '../data/practice';
       </div>
 
       <div class="hero__globe" data-reveal style="--d:2">
-        <Globe />
+        <Dial />
       </div>
     </div>
 
@@ -42,36 +48,36 @@ import { practice } from '../data/practice';
       <dl class="data-row">
         <div><dt>Local</dt><dd data-clock>--:--:--</dd></div>
         <div><dt>Zone</dt><dd>UTC+08:00</dd></div>
-        <div><dt>View lat</dt><dd data-lat>31.2989° N</dd></div>
-        <div><dt>View lon</dt><dd data-lon>120.5853° E</dd></div>
+        <div><dt>Longitude</dt><dd data-deg>60°</dd></div>
+        <div><dt>Solar term</dt><dd data-term>小满</dd></div>
       </dl>
       <span class="tc">REC <span class="tc__num" data-tc>00:00:00:00</span></span>
     </div>
   </section>
 
   <script>
-    // 地球拖到哪，读数就变到哪（视图中心经纬度）
-    const fmt = (v: number, pos: string, neg: string) =>
-      Math.abs(v).toFixed(4) + '° ' + (v >= 0 ? pos : neg);
-
-    function bindGlobeReadout() {
-      const lat = document.querySelector<HTMLElement>('[data-lat]');
-      const lon = document.querySelector<HTMLElement>('[data-lon]');
-      if (!lat || !lon) return;
-      const w = window as Window & { __globeBound?: boolean };
-      if (w.__globeBound) return;
-      w.__globeBound = true;
-      window.addEventListener('globe:view', (e: Event) => {
-        const d = (e as CustomEvent<{ lat: number; lon: number }>).detail;
-        const roll = (window as Window & { dsRoll?: (el: HTMLElement, v: string) => void }).dsRoll;
-        const set = (el: HTMLElement, v: string) => (roll ? roll(el, v) : (el.textContent = v));
-        set(lat, fmt(d.lat, 'N', 'S'));
-        set(lon, fmt(d.lon, 'E', 'W'));
+    // 节气盘转到哪，读数就走到哪（太阳黄经）
+    function bindDialReadout() {
+      const degEl = document.querySelector<HTMLElement>('[data-deg]');
+      const termEl = document.querySelector<HTMLElement>('[data-term]');
+      if (!degEl || !termEl) return;
+      const w = window as Window & { __dialBound?: boolean };
+      if (w.__dialBound) return;
+      w.__dialBound = true;
+      const roll = (window as Window & { dsRoll?: (el: HTMLElement, v: string) => void }).dsRoll;
+      const set = (el: HTMLElement, v: string) => (roll ? roll(el, v) : (el.textContent = v));
+      window.addEventListener('dial:view', (e: Event) => {
+        const d = (e as CustomEvent<{ deg: number }>).detail;
+        set(degEl, Math.round(d.deg) + '°');
+      });
+      window.addEventListener('dial:today', (e: Event) => {
+        const d = (e as CustomEvent<{ name: string }>).detail;
+        set(termEl, d.name);
       });
     }
 
-    document.addEventListener('astro:page-load', bindGlobeReadout);
-    bindGlobeReadout();
+    document.addEventListener('astro:page-load', bindDialReadout);
+    bindDialReadout();
 
     // 名字：描边之外，指针附近"渗"进一团暖墨——越靠近，填进来的面积越大
     function bindNameFocus() {
@@ -143,7 +149,7 @@ import { practice } from '../data/practice';
 
       const fly = document.createElement('div');
       fly.className = 'fly-name';
-      fly.textContent = '刘启征';
+      fly.textContent = '小满';
       fly.setAttribute('aria-hidden', 'true');
       document.body.appendChild(fly);
 

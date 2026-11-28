@@ -1,0 +1,359 @@
+---
+// 节气盘：24 个节气绕一圈，小满永远在正上方
+// 不画地球、不画大陆 —— 只在「时间」里定位，不在「地理」里定位
+// 交互：拖拽转动 / 悬停暂停 / 慢速自转 / 点小满那盏小灯 → 去 About
+type Term = { name: string; deg: number; date: string };
+const terms: Term[] = [
+  { name: '春分', deg: 0, date: '3.20' },
+  { name: '清明', deg: 15, date: '4.4' },
+  { name: '谷雨', deg: 30, date: '4.20' },
+  { name: '立夏', deg: 45, date: '5.5' },
+  { name: '小满', deg: 60, date: '5.21' },
+  { name: '芒种', deg: 75, date: '6.5' },
+  { name: '夏至', deg: 90, date: '6.21' },
+  { name: '小暑', deg: 105, date: '7.7' },
+  { name: '大暑', deg: 120, date: '7.22' },
+  { name: '立秋', deg: 135, date: '8.7' },
+  { name: '处暑', deg: 150, date: '8.23' },
+  { name: '白露', deg: 165, date: '9.7' },
+  { name: '秋分', deg: 180, date: '9.23' },
+  { name: '寒露', deg: 195, date: '10.8' },
+  { name: '霜降', deg: 210, date: '10.23' },
+  { name: '立冬', deg: 225, date: '11.7' },
+  { name: '小雪', deg: 240, date: '11.22' },
+  { name: '大雪', deg: 255, date: '12.7' },
+  { name: '冬至', deg: 270, date: '12.21' },
+  { name: '小寒', deg: 285, date: '1.5' },
+  { name: '大寒', deg: 300, date: '1.20' },
+  { name: '立春', deg: 315, date: '2.4' },
+  { name: '雨水', deg: 330, date: '2.19' },
+  { name: '惊蛰', deg: 345, date: '3.5' },
+];
+---
+
+<figure class="dial" data-dial data-terms={JSON.stringify(terms)}>
+  <div class="dial__frame" data-cursor="Drag">
+    <canvas class="dial__canvas" aria-hidden="true"></canvas>
+    <div class="dial__core">
+      <span class="dial__han">小满</span>
+      <span class="dial__en mono">Grain Buds · 60°</span>
+    </div>
+  </div>
+  <figcaption class="dial__cap">
+    <span class="mono">Solar term</span>
+    <span class="mono dial__where">小满 · 5.21</span>
+    <span class="mono dial__today" data-today>今天 · ——</span>
+  </figcaption>
+</figure>
+
+<style>
+  .dial {
+    margin: 0;
+    display: grid;
+    gap: 14px;
+    justify-items: center;
+  }
+  .dial__frame {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 1;
+    border-radius: 50%;
+    touch-action: pan-y;
+    cursor: grab;
+  }
+  .dial__frame:active {
+    cursor: grabbing;
+  }
+  .dial__canvas {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    display: block;
+  }
+  .dial__core {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-content: center;
+    justify-items: center;
+    gap: 6px;
+    pointer-events: none;
+    text-align: center;
+  }
+  .dial__han {
+    font-family: var(--font-serif);
+    font-weight: 900;
+    font-size: clamp(34px, 6.4vh, 62px);
+    line-height: 1;
+    letter-spacing: 0.08em;
+    color: var(--ink);
+  }
+  .dial__en {
+    font-size: 9px;
+    letter-spacing: 0.2em;
+    color: var(--gray);
+    text-transform: uppercase;
+  }
+  .dial__cap {
+    display: grid;
+    gap: 2px;
+    justify-items: center;
+    color: var(--gray);
+    font-size: 10px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+  }
+  .dial__where {
+    color: var(--ink);
+  }
+  .dial__today {
+    color: var(--accent);
+  }
+</style>
+
+<script>
+  type Term = { name: string; deg: number; date: string };
+  const DEG = Math.PI / 180;
+  const RAD = 180 / Math.PI;
+
+  /* 小满固定在正上方：屏幕角 = (黄经 - 60) - 90 */
+  const TOP = -90 - 0;
+  const PIN_AT = 60;
+
+  document.querySelectorAll<HTMLElement>('[data-dial]').forEach((root) => {
+    const canvas = root.querySelector<HTMLCanvasElement>('.dial__canvas');
+    const frame = root.querySelector<HTMLElement>('.dial__frame');
+    const todayEl = root.querySelector<HTMLElement>('[data-today]');
+    if (!canvas || !frame) return;
+
+    const terms: Term[] = JSON.parse(root.dataset.terms || '[]');
+    const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    /* 今天落在哪个节气：取「日期不晚于今天」的最后一个 */
+    const now = new Date();
+    const month = now.getMonth() + 1;
+    const day = now.getDate();
+    const stamp = (m: number, d: number) => m * 100 + d;
+    const today = stamp(month, day);
+    let current = terms[0];
+    let best = -1;
+    for (const t of terms) {
+      const [m, d] = t.date.split('.').map(Number);
+      const v = stamp(m, d);
+      if (v <= today && v > best) {
+        best = v;
+        current = t;
+      }
+    }
+    if (todayEl) todayEl.textContent = `今天 · ${current.name}`;
+    window.dispatchEvent(new CustomEvent('dial:today', { detail: { name: current.name } }));
+
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    let size = 0;
+    let rot = 0; /* 弧度 */
+    let vel = 0;
+    let dragging = false;
+    let hover = false;
+    let mark = { x: -99, y: -99 };
+    let last = performance.now();
+    let raf = 0;
+
+    const accent = () =>
+      getComputedStyle(document.documentElement).getPropertyValue('--accent').trim() || '#2b52ff';
+
+    const resize = () => {
+      const r = frame.getBoundingClientRect();
+      const dpr = Math.min(2, window.devicePixelRatio || 1);
+      size = Math.round(r.width);
+      canvas.width = Math.round(size * dpr);
+      canvas.height = Math.round(size * dpr);
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      draw();
+    };
+
+    /* 小满永远钉在正上方（12 点），其余节气按黄经排开 */
+    const angleOf = (deg: number) => (deg - PIN_AT) * DEG - Math.PI / 2 + rot;
+
+    const draw = () => {
+      if (!size) return;
+      const c = size / 2;
+      const R = c - 6;
+      ctx.clearRect(0, 0, size, size);
+      ctx.lineCap = 'butt';
+
+      /* 外圈 */
+      ctx.beginPath();
+      ctx.arc(c, c, R, 0, Math.PI * 2);
+      ctx.strokeStyle = 'rgba(236, 233, 227, 0.22)';
+      ctx.lineWidth = 1;
+      ctx.stroke();
+
+      /* 刻度：每 5°，节气处加长 */
+      for (let i = 0; i < 72; i++) {
+        const a = i * 5 * DEG + rot - Math.PI / 2;
+        const major = i % 3 === 0;
+        const r1 = R - (major ? 9 : 4);
+        ctx.beginPath();
+        ctx.moveTo(c + Math.cos(a) * r1, c + Math.sin(a) * r1);
+        ctx.lineTo(c + Math.cos(a) * (R - 1), c + Math.sin(a) * (R - 1));
+        ctx.strokeStyle = major ? 'rgba(236, 233, 227, 0.3)' : 'rgba(236, 233, 227, 0.1)';
+        ctx.stroke();
+      }
+
+      /* 内圈两道 */
+      for (const k of [0.72, 0.5]) {
+        ctx.beginPath();
+        ctx.arc(c, c, R * k, 0, Math.PI * 2);
+        ctx.strokeStyle = k === 0.72 ? 'rgba(236, 233, 227, 0.12)' : 'rgba(236, 233, 227, 0.07)';
+        ctx.lineWidth = 1;
+        ctx.stroke();
+      }
+
+      /* 24 个节气名（保持正立，像表盘） */
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      for (const t of terms) {
+        const a = angleOf(t.deg);
+        const r = R * 0.855;
+        const x = c + Math.cos(a) * r;
+        const y = c + Math.sin(a) * r;
+        const isPin = t.deg === PIN_AT;
+        const isNow = t.name === current.name;
+        ctx.font = `${isPin ? '500 ' : ''}10px "JetBrains Mono", "Noto Sans SC", monospace`;
+        const major = t.deg % 45 === 0;
+        /* 小屏只留八节 + 小满 + 今天，别糊成一圈 */
+        if (size < 430 && !major && !isPin && !isNow) continue;
+        ctx.fillStyle = isPin
+          ? accent()
+          : isNow
+            ? 'rgba(236, 233, 227, 0.95)'
+            : major
+              ? 'rgba(236, 233, 227, 0.56)'
+              : 'rgba(236, 233, 227, 0.3)';
+        ctx.fillText(t.name, x, y);
+      }
+
+      /* 指针：从内圈指向今天的节气 */
+      const ap = angleOf(current.deg);
+      ctx.beginPath();
+      ctx.moveTo(c + Math.cos(ap) * R * 0.5, c + Math.sin(ap) * R * 0.5);
+      ctx.lineTo(c + Math.cos(ap) * R * 0.8, c + Math.sin(ap) * R * 0.8);
+      ctx.strokeStyle = 'rgba(236, 233, 227, 0.8)';
+      ctx.lineWidth = 1.2;
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.arc(c + Math.cos(ap) * R * 0.71, c + Math.sin(ap) * R * 0.71, 2.4, 0, Math.PI * 2);
+      ctx.fillStyle = 'rgba(236, 233, 227, 0.85)';
+      ctx.fill();
+
+      /* 小满那一盏：一颗会呼吸的小灯 */
+      const am = angleOf(PIN_AT);
+      const mx = c + Math.cos(am) * R * 0.93;
+      const my = c + Math.sin(am) * R * 0.93;
+      mark = { x: mx, y: my };
+      root.dataset.mark = `${mx.toFixed(1)},${my.toFixed(1)}`;
+      const breathe = hover ? 0.75 : 0.55;
+      ctx.beginPath();
+      ctx.arc(mx, my, 2.6, 0, Math.PI * 2);
+      ctx.fillStyle = accent();
+      ctx.globalAlpha = breathe;
+      ctx.fill();
+      ctx.globalAlpha = 0.16;
+      ctx.beginPath();
+      ctx.arc(mx, my, 6.5, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.globalAlpha = 1;
+
+      /* 圆心十字 */
+      ctx.strokeStyle = 'rgba(236, 233, 227, 0.18)';
+      ctx.beginPath();
+      ctx.moveTo(c - 5, c);
+      ctx.lineTo(c + 5, c);
+      ctx.moveTo(c, c - 5);
+      ctx.lineTo(c, c + 5);
+      ctx.stroke();
+    };
+
+    /* 读数：转动就是在「走黄经」，交给页面上的数据行 */
+    let lastEmit = 0;
+    const emit = (now: number) => {
+      if (now - lastEmit < 110) return;
+      lastEmit = now;
+      const deg = ((((rot * RAD + PIN_AT) % 360) + 360) % 360);
+      window.dispatchEvent(new CustomEvent('dial:view', { detail: { deg } }));
+    };
+
+    const loop = (now: number) => {
+      const dt = Math.min(48, now - last);
+      last = now;
+      if (!dragging) {
+        if (!reduce && !hover) rot += 0.00006 * dt;
+        rot += vel * dt;
+        vel *= Math.pow(0.9, dt / 16);
+        if (Math.abs(vel) < 1e-6) vel = 0;
+      }
+      draw();
+      emit(now);
+      raf = requestAnimationFrame(loop);
+    };
+
+    let px = 0;
+    let moved = 0;
+    const hitsPin = (e: PointerEvent) => {
+      const rect = frame.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+      const cc = size / 2;
+      const rr = Math.hypot(x - cc, y - cc);
+      const aa = Math.atan2(y - cc, x - cc);
+      const want = angleOf(PIN_AT);
+      const da = Math.abs(((aa - want + Math.PI * 3) % (Math.PI * 2)) - Math.PI);
+      return rr > size * 0.36 && da < 0.14;
+    };
+
+    frame.addEventListener('pointerdown', (e) => {
+      /* 正好按在小满那盏灯上：直接去 About（当作点击，不当作拖拽） */
+      if (hitsPin(e)) {
+        (window as Window & { dsFound?: (id: string) => void }).dsFound?.('pin');
+        window.location.href = '/about/';
+        return;
+      }
+      dragging = true;
+      moved = 0;
+      px = e.clientX;
+      vel = 0;
+      try {
+        frame.setPointerCapture(e.pointerId);
+      } catch {}
+    });
+    frame.addEventListener('pointermove', (e) => {
+      if (!dragging) return;
+      const dx = e.clientX - px;
+      px = e.clientX;
+      moved += Math.abs(dx);
+      rot += dx * 0.0045;
+      vel = dx * 0.00022;
+    });
+    const end = (e: PointerEvent) => {
+      if (!dragging) return;
+      dragging = false;
+      /* 点击（不是拖拽）留给以后的扩展；小满那盏灯的跳转在 pointerdown 里 */
+    };
+    frame.addEventListener('pointerup', end);
+    frame.addEventListener('pointercancel', () => (dragging = false));
+    frame.addEventListener('pointerenter', () => (hover = true));
+    frame.addEventListener('pointerleave', () => {
+      hover = false;
+      dragging = false;
+    });
+
+    new ResizeObserver(resize).observe(frame);
+    resize();
+    if (reduce) draw();
+    else raf = requestAnimationFrame(loop);
+
+    document.addEventListener('astro:before-swap', () => cancelAnimationFrame(raf));
+  });
+</script>

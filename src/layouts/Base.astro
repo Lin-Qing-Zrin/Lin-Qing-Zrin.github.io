@@ -14,7 +14,7 @@ interface Props {
 }
 
 const {
-  title = '刘启征 — 短片 · 游戏 · 特效',
+  title = 'Tupo_小满 — 短片 · 游戏 · 特效',
   description = '苏州健雄职业技术学院 · 数字媒体技术。短片、虚幻引擎场景与三维特效。',
   bare = false,
 } = Astro.props;
@@ -819,7 +819,7 @@ const {
          - 找到的条目存在 localStorage（只在本地，不联网）
          - 任何地方发现彩蛋都调 window.dsFound('id')
          ------------------------------------------------------------ */
-      const FOUND_KEY = 'lqz.found';
+      const FOUND_KEY = 'tupo.found';
       const readFound = (): string[] => {
         try {
           const raw = localStorage.getItem(FOUND_KEY);
@@ -855,7 +855,7 @@ const {
         const big = 'font: 600 42px/1.1 "Noto Serif SC", serif; color:#ece9e3;';
         const small = 'font: 400 12px/1.7 ui-monospace, monospace; color:#8a8a86;';
         const acc = 'font: 500 12px/1.7 ui-monospace, monospace; color:#2b52ff;';
-        console.log('%c刘启征', big);
+        console.log('%c小满', big);
         console.log('%cFILM · GAME · VFX · SELF-MEDIA', small);
         console.log('%c', 'font-size:0');
         console.log('%c你打开了控制台。这里通常没人来。', small);
@@ -887,8 +887,8 @@ const {
           }
           if (e.metaKey || e.ctrlKey || e.altKey) return;
           if (e.key.length !== 1) return;
-          buffer = (buffer + e.key.toLowerCase()).slice(-3);
-          if (buffer === 'lqz') {
+          buffer = (buffer + e.key.toLowerCase()).slice(-4);
+          if (buffer === 'tupo') {
             buffer = '';
             toggle();
           }
