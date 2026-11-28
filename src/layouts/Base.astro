@@ -320,6 +320,33 @@ const {
         hudTarget.classList.toggle('is-on', Boolean(text));
       }
 
+      // 分类目录：保留原生链接与 Tab 顺序，只在目录内处理方向键。
+      function initCategoryKeys() {
+        const list = document.querySelector<HTMLElement>('.cat-list');
+        if (!list || list.dataset.keysBound) return;
+        list.dataset.keysBound = 'true';
+        const rows = Array.from(list.querySelectorAll<HTMLAnchorElement>('a[href]:not([aria-disabled="true"])'));
+        list.addEventListener('focusin', (e) => {
+          const row = (e.target as Element).closest<HTMLAnchorElement>('.cat-row');
+          if (!row || !rows.includes(row)) return;
+          const label = ['.cat-row__no', '.cat-row__en', '.cat-row__meta']
+            .map((selector) => row.querySelector(selector)?.textContent?.trim()).filter(Boolean);
+          setHudTarget(label.join(' / '));
+          row.classList.add('is-in');
+        });
+        list.addEventListener('focusout', (e) => {
+          if (!(e.relatedTarget instanceof Node) || !list.contains(e.relatedTarget)) setHudTarget('');
+        });
+        list.addEventListener('keydown', (e) => {
+          if (e.altKey || e.ctrlKey || e.metaKey || e.shiftKey) return;
+          const index = rows.indexOf(document.activeElement as HTMLAnchorElement);
+          if (index < 0 || !['ArrowDown', 'ArrowUp', 'Home', 'End'].includes(e.key)) return;
+          e.preventDefault();
+          const next = e.key === 'Home' ? 0 : e.key === 'End' ? rows.length - 1
+            : Math.max(0, Math.min(rows.length - 1, index + (e.key === 'ArrowDown' ? 1 : -1)));
+          rows[next].focus();
+        });
+      }
       function initHud() {
         hudFrame = document.querySelector<HTMLElement>('[data-hud-frame]');
         hudScroll = document.querySelector<HTMLElement>('[data-hud-scroll]');
@@ -939,6 +966,7 @@ const {
         initClock();
         initTimecode();
         initHud();
+        initCategoryKeys();
         initField();
         initGhosts();
         initMagnetic();

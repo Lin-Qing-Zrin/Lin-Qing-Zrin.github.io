@@ -2662,3 +2662,14 @@ html.is-raw canvas {
     letter-spacing: 0.1em;
   }
 }
+/* 键盘选中项：即时 opacity 提示；不改配色，不增加运动。 */
+.cat-list:focus-within .cat-row[href]:not(:focus) { opacity: 0.55; }
+.cat-list .cat-row:focus { opacity: 1; transform: none; transition: none; }
+.cat-list:focus-within .cat-row,
+.cat-list .cat-row:focus .cat-row__en { transition: none; }
+body:has(.cat-list) .hud__target { transition: none; transform: none; }
+@media (prefers-reduced-motion: reduce) {
+  .cat-list .cat-row,
+  .cat-list .cat-row__en,
+  body:has(.cat-list) .hud__target { transform: none !important; transition: none !important; }
+}
