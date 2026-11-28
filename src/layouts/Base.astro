@@ -288,6 +288,15 @@ const {
               .formatToParts(now)
               .find((p) => p.type === 'timeZoneName')?.value ?? '';
           nodes.forEach((n) => rollTo(n, `${time} ${tz}`));
+          // 日期与站点时钟同属 UTC+08；复用时钟刷新，不增加动画或计时器。
+          const date = new Intl.DateTimeFormat('en-CA', {
+            timeZone: 'Asia/Shanghai', year: 'numeric', month: '2-digit', day: '2-digit',
+          }).format(now);
+          document.querySelectorAll<HTMLTimeElement>('[data-dial-date]').forEach((el) => {
+            el.dateTime = date;
+            el.textContent = date.slice(5).replace('-', '.');
+            el.setAttribute('aria-label', `Today ${date} · UTC+08:00`);
+          });
         };
         tick();
         window.setInterval(tick, 1000 * 20);
